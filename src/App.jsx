@@ -6,10 +6,10 @@ const groups = {
   3: ["Russell Henley", "J.J. Spaun", "Xander Schauffele", "Chris Gotterup", "Robert MacIntyre"],
   4: ["Sepp Straka", "Ben Griffin", "Ludvig Åberg", "Hideki Matsuyama", "Justin Thomas"],
   5: ["Alex Noren", "Akshay Bhatia", "Si Woo Kim", "Jon Rahm", "Harris English"],
-  6: ["Patrick Reed", "Akshay Bhatia", "Tyrrell Hatton", "Viktor Hovland", "Min Woo Lee", "Maverick McNealy"],
-  7: ["Bryson DeChambeau", "Keegan Bradley", "Sam Burns", "Chris Gotterup", "Patrick Cantlay"],
+  6: ["Patrick Reed", "Tyrrell Hatton", "Viktor Hovland", "Min Woo Lee", "Maverick McNealy"],
+  7: ["Bryson DeChambeau", "Keegan Bradley", "Sam Burns", "Patrick Cantlay"],
   8: ["Kurt Kitayama", "Shane Lowry", "Jake Knapp", "Nicolai Højgaard", "Jason Day"],
-  9: ["Matthieu Pavon", "Michael Block", "Michael Kim", "Aaron Rai", "Adam Scott", "Xander Schauffele", "Rory McIlroy"],
+  9: ["Matthieu Pavon", "Michael Block", "Michael Kim", "Aaron Rai", "Adam Scott"],
   10: ["Sam Stevens", "Gary Woodland", "Kristoffer Reitan", "Corey Conners", "Jordan Spieth", "Brooks Koepka"],
   11: ["Michael Brennan", "Rickie Fowler", "Brian Harman", "Andrew Novak", "Ryan Fox", "Pierceson Coody"],
   12: ["Sami Välimäki", "Ryo Hisatsune", "David Puig", "Nick Taylor", "Rasmus Højgaard", "Michael Thorbjornsen"],
@@ -18,8 +18,8 @@ const groups = {
 };
 
 export default function App() {
-
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     name: ""
@@ -38,6 +38,7 @@ export default function App() {
     const scriptURL = "https://script.google.com/macros/s/AKfycbwC5FqXpq2c9y7uwXl_rrUTA47yPZTKXXQzWahKtf7VyM0QRG8rQ5XrX3W6NnwZF9vQ_w/exec";
 
     try {
+      setSubmitting(true);
 
       await fetch(scriptURL, {
         method: "POST",
@@ -45,17 +46,17 @@ export default function App() {
       });
 
       setSubmitted(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
 
     } catch (err) {
-
       console.error(err);
       alert("Submission failed.");
-
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  return (
-
+  const pageShell = (content) => (
     <>
       <link
         rel="preconnect"
@@ -74,7 +75,6 @@ export default function App() {
       />
 
       <div className="min-h-screen bg-[#dddddd] p-6 md:p-10">
-
         <div
           className="
             max-w-6xl
@@ -85,7 +85,6 @@ export default function App() {
             shadow-[0_30px_80px_rgba(0,0,0,.28)]
           "
         >
-
           <div
             className="absolute inset-0 bg-cover bg-center scale-[1.02]"
             style={{
@@ -97,9 +96,7 @@ export default function App() {
           <div className="absolute inset-0 bg-black/8 backdrop-[blur(.5px)]" />
 
           <div className="relative z-10 px-5 md:px-12 py-10 md:py-14">
-
             <div className="text-center">
-
               <div
                 className="
                   text-[#0a2d4f]
@@ -169,299 +166,409 @@ export default function App() {
               >
                 Pick ’Em
               </div>
+            </div>
 
+            {content}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+
+  if (submitted) {
+    return pageShell(
+      <div
+        className="
+          max-w-5xl
+          mx-auto
+          mt-10
+          rounded-[28px]
+          overflow-hidden
+          shadow-[0_20px_70px_rgba(0,0,0,.35)]
+          border
+          border-white/20
+        "
+      >
+        <div
+          className="px-8 md:px-12 py-8 text-white"
+          style={{
+            background:
+              "linear-gradient(135deg,#0c281c 0%, #03251c 50%, #0b4b32 100%)"
+          }}
+        >
+          <div
+            className="
+              uppercase
+              tracking-[.12em]
+              text-center
+            "
+            style={{
+              fontFamily: "'Oswald', sans-serif",
+              fontSize: "2.2rem",
+              fontWeight: 700
+            }}
+          >
+            Team Submitted
+          </div>
+
+          <div
+            className="text-center mt-3 text-white/90"
+            style={{
+              fontFamily: "'Oswald', sans-serif",
+              fontSize: "1.2rem",
+              fontWeight: 300
+            }}
+          >
+            Your picks have been saved.
+          </div>
+        </div>
+
+        <div className="bg-[#f6f6f4] px-8 md:px-12 py-10">
+          <div
+            className="
+              mb-8
+              text-[#24342c]
+            "
+            style={{
+              fontFamily: "'Oswald', sans-serif"
+            }}
+          >
+            <div
+              className="
+                uppercase
+                mb-2
+              "
+              style={{
+                fontWeight: 700,
+                letterSpacing: ".18em",
+                fontSize: ".9rem"
+              }}
+            >
+              Name
             </div>
 
             <div
               className="
-                max-w-5xl
-                mx-auto
-                mt-10
-                rounded-[28px]
-                overflow-hidden
-                shadow-[0_20px_70px_rgba(0,0,0,.35)]
+                rounded-xl
+                bg-white
                 border
-                border-white/20
+                border-[#d4d4d4]
+                px-5
+                py-4
+                text-xl
+                shadow-sm
               "
             >
+              {formData.name}
+            </div>
+          </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {Object.entries(groups).map(([groupNum]) => (
               <div
-                className="px-8 md:px-12 py-8 text-white"
-                style={{
-                  background:
-                    "linear-gradient(135deg,#0c281c 0%, #03251c 50%, #0b4b32 100%)"
-                }}
+                key={groupNum}
+                className="
+                  rounded-xl
+                  bg-white
+                  border
+                  border-[#d4d4d4]
+                  px-5
+                  py-4
+                  shadow-sm
+                "
               >
-
-                <div className="flex items-center gap-4 mb-6">
-
-                  <div
-                    className="text-[#d2aa53]"
-                    style={{
-                      fontSize: "2.2rem"
-                    }}
-                  >
-                    🏆
-                  </div>
-
-                  <div
-                    className="
-                      uppercase
-                      tracking-[.12em]
-                    "
-                    style={{
-                      fontFamily: "'Oswald', sans-serif",
-                      fontSize: "2rem",
-                      fontWeight: 700
-                    }}
-                  >
-                    How To Play
-                  </div>
-
-                </div>
-
                 <div
                   className="
-                    space-y-3
-                    text-white/95
+                    uppercase
+                    text-[#24342c]
+                    mb-1
                   "
                   style={{
                     fontFamily: "'Oswald', sans-serif",
-                    fontWeight: 300,
-                    fontSize: "1.25rem",
-                    letterSpacing: ".01em"
+                    fontWeight: 700,
+                    letterSpacing: ".16em",
+                    fontSize: ".8rem"
                   }}
                 >
-
-                  <div>• 2 teams per household.</div>
-
-                  <div>• Take one player from each group.</div>
-
-                  <div>• Your top 10 scores will be your total score.</div>
-
-                  <div>• If your player withdraws during his round, he will not be replaced.</div>
-
+                  Group {groupNum}
                 </div>
 
+                <div
+                  className="text-[#222]"
+                  style={{
+                    fontFamily: "'Oswald', sans-serif",
+                    fontSize: "1.2rem"
+                  }}
+                >
+                  {formData[`group${groupNum}`]}
+                </div>
               </div>
-
-              <div className="bg-[#f6f6f4] px-8 md:px-12 py-10">
-
-                <form onSubmit={handleSubmit}>
-
-                  <div className="mb-10">
-
-                    <label
-                      className="
-                        block
-                        mb-4
-                        uppercase
-                        text-[#24342c]
-                      "
-                      style={{
-                        fontFamily: "'Oswald', sans-serif",
-                        fontWeight: 700,
-                        letterSpacing: ".18em",
-                        fontSize: ".9rem"
-                      }}
-                    >
-                      Your Name
-                    </label>
-
-                    <input
-                      type="text"
-                      required
-                      name="name"
-                      onChange={handleChange}
-                      placeholder="Enter your full name"
-                      className="
-                        w-full
-                        rounded-xl
-                        border
-                        border-[#d4d4d4]
-                        bg-white
-                        px-5
-                        py-4
-                        text-lg
-                        shadow-sm
-                        outline-none
-                        transition
-                        focus:border-[#0c5c38]
-                        focus:ring-4
-                        focus:ring-green-200
-                      "
-                    />
-
-                  </div>
-
-                  <div className="flex items-center gap-5 mb-10">
-
-                    <div className="h-[2px] flex-1 bg-[#b28a44]" />
-
-                    <div
-                      className="
-                        uppercase
-                        text-[#22342d]
-                        whitespace-nowrap
-                      "
-                      style={{
-                        fontFamily: "'Oswald', sans-serif",
-                        fontWeight: 700,
-                        letterSpacing: ".16em",
-                        fontSize: "1rem"
-                      }}
-                    >
-                      Select One Player From Each Group
-                    </div>
-
-                    <div className="h-[2px] flex-1 bg-[#b28a44]" />
-
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-8 gap-y-7">
-
-                    {Object.entries(groups).map(([groupNum, players]) => (
-
-                      <div key={groupNum}>
-
-                        <label
-                          className="
-                            block
-                            mb-3
-                            uppercase
-                            text-[#24342c]
-                          "
-                          style={{
-                            fontFamily: "'Oswald', sans-serif",
-                            fontWeight: 700,
-                            letterSpacing: ".16em",
-                            fontSize: ".8rem"
-                          }}
-                        >
-                          Group {groupNum}
-                        </label>
-
-                        <select
-                          required
-                          name={`group${groupNum}`}
-                          onChange={handleChange}
-                          className="
-                            w-full
-                            rounded-xl
-                            border
-                            border-[#d6d6d6]
-                            bg-white
-                            px-4
-                            py-4
-                            text-[#444]
-                            shadow-sm
-                            outline-none
-                            transition
-                            focus:border-[#0c5c38]
-                            focus:ring-4
-                            focus:ring-green-200
-                          "
-                        >
-
-                          <option value="">
-                            Select a player
-                          </option>
-
-                          {players.map((player) => (
-
-                            <option
-                              key={player}
-                              value={player}
-                            >
-                              {player}
-                            </option>
-
-                          ))}
-
-                        </select>
-
-                      </div>
-
-                    ))}
-
-                  </div>
-
-                  <div className="text-center mt-14">
-
-                    <button
-                      type="submit"
-                      className="
-                        relative
-                        overflow-hidden
-                        px-14
-                        py-5
-                        rounded-xl
-                        text-white
-                        uppercase
-                        transition
-                        hover:scale-[1.015]
-                        shadow-[0_10px_35px_rgba(0,0,0,.28)]
-                      "
-                      style={{
-                        background:
-                          "linear-gradient(135deg,#07261a 0%, #0d5938 100%)",
-                        fontFamily: "'Oswald', sans-serif",
-                        fontWeight: 700,
-                        letterSpacing: ".12em",
-                        fontSize: "1.3rem"
-                      }}
-                    >
-
-                      <div className="flex items-center gap-4">
-
-                        <span className="text-2xl">
-                          ⛳
-                        </span>
-
-                        <span>
-                          Submit My Team
-                        </span>
-
-                      </div>
-
-                    </button>
-
-                    {submitted && (
-
-                      <div className="mt-5 text-green-700 font-bold">
-                        Fantasy team submitted successfully.
-                      </div>
-
-                    )}
-
-                  </div>
-
-                  <div
-                    className="
-                      text-center
-                      mt-6
-                      text-[#666]
-                    "
-                    style={{
-                      fontFamily: "'Oswald', sans-serif",
-                      fontSize: ".9rem"
-                    }}
-                  >
-                    Your picks will be saved securely.
-                  </div>
-
-                </form>
-
-              </div>
-
-            </div>
-
+            ))}
           </div>
 
+          <div
+            className="
+              text-center
+              mt-8
+              text-[#666]
+            "
+            style={{
+              fontFamily: "'Oswald', sans-serif",
+              fontSize: "1rem"
+            }}
+          >
+            Screenshot this page if you want a personal copy of your picks.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return pageShell(
+    <div
+      className="
+        max-w-5xl
+        mx-auto
+        mt-10
+        rounded-[28px]
+        overflow-hidden
+        shadow-[0_20px_70px_rgba(0,0,0,.35)]
+        border
+        border-white/20
+      "
+    >
+      <div
+        className="px-8 md:px-12 py-8 text-white"
+        style={{
+          background:
+            "linear-gradient(135deg,#0c281c 0%, #03251c 50%, #0b4b32 100%)"
+        }}
+      >
+        <div className="flex items-center gap-4 mb-6">
+          <div
+            className="text-[#d2aa53]"
+            style={{
+              fontSize: "2.2rem"
+            }}
+          >
+            🏆
+          </div>
+
+          <div
+            className="
+              uppercase
+              tracking-[.12em]
+            "
+            style={{
+              fontFamily: "'Oswald', sans-serif",
+              fontSize: "2rem",
+              fontWeight: 700
+            }}
+          >
+            How To Play
+          </div>
         </div>
 
+        <div
+          className="
+            space-y-3
+            text-white/95
+          "
+          style={{
+            fontFamily: "'Oswald', sans-serif",
+            fontWeight: 300,
+            fontSize: "1.25rem",
+            letterSpacing: ".01em"
+          }}
+        >
+          <div>• 2 teams per household.</div>
+          <div>• Take one player from each group.</div>
+          <div>• Your top 10 scores will be your total score.</div>
+          <div>• If your player withdraws during his round, he will not be replaced.</div>
+        </div>
       </div>
-    </>
 
+      <div className="bg-[#f6f6f4] px-8 md:px-12 py-10">
+        <form onSubmit={handleSubmit}>
+          <div className="mb-10">
+            <label
+              className="
+                block
+                mb-4
+                uppercase
+                text-[#24342c]
+              "
+              style={{
+                fontFamily: "'Oswald', sans-serif",
+                fontWeight: 700,
+                letterSpacing: ".18em",
+                fontSize: ".9rem"
+              }}
+            >
+              Your Name
+            </label>
+
+            <input
+              type="text"
+              required
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              placeholder="Enter your full name"
+              className="
+                w-full
+                rounded-xl
+                border
+                border-[#d4d4d4]
+                bg-white
+                px-5
+                py-4
+                text-lg
+                shadow-sm
+                outline-none
+                transition
+                focus:border-[#0c5c38]
+                focus:ring-4
+                focus:ring-green-200
+              "
+            />
+          </div>
+
+          <div className="flex items-center gap-5 mb-10">
+            <div className="h-[2px] flex-1 bg-[#b28a44]" />
+
+            <div
+              className="
+                uppercase
+                text-[#22342d]
+                whitespace-nowrap
+              "
+              style={{
+                fontFamily: "'Oswald', sans-serif",
+                fontWeight: 700,
+                letterSpacing: ".16em",
+                fontSize: "1rem"
+              }}
+            >
+              Select One Player From Each Group
+            </div>
+
+            <div className="h-[2px] flex-1 bg-[#b28a44]" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-8 gap-y-7">
+            {Object.entries(groups).map(([groupNum, players]) => (
+              <div key={groupNum}>
+                <label
+                  className="
+                    block
+                    mb-3
+                    uppercase
+                    text-[#24342c]
+                  "
+                  style={{
+                    fontFamily: "'Oswald', sans-serif",
+                    fontWeight: 700,
+                    letterSpacing: ".16em",
+                    fontSize: ".8rem"
+                  }}
+                >
+                  Group {groupNum}
+                </label>
+
+                <select
+                  required
+                  name={`group${groupNum}`}
+                  value={formData[`group${groupNum}`] || ""}
+                  onChange={handleChange}
+                  className="
+                    w-full
+                    rounded-xl
+                    border
+                    border-[#d6d6d6]
+                    bg-white
+                    px-4
+                    py-4
+                    text-[#444]
+                    shadow-sm
+                    outline-none
+                    transition
+                    focus:border-[#0c5c38]
+                    focus:ring-4
+                    focus:ring-green-200
+                  "
+                >
+                  <option value="">
+                    Select a player
+                  </option>
+
+                  {players.map((player) => (
+                    <option
+                      key={player}
+                      value={player}
+                    >
+                      {player}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center mt-14">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="
+                relative
+                overflow-hidden
+                px-14
+                py-5
+                rounded-xl
+                text-white
+                uppercase
+                transition
+                hover:scale-[1.015]
+                disabled:opacity-60
+                disabled:cursor-not-allowed
+                shadow-[0_10px_35px_rgba(0,0,0,.28)]
+              "
+              style={{
+                background:
+                  "linear-gradient(135deg,#07261a 0%, #0d5938 100%)",
+                fontFamily: "'Oswald', sans-serif",
+                fontWeight: 700,
+                letterSpacing: ".12em",
+                fontSize: "1.3rem"
+              }}
+            >
+              <div className="flex items-center gap-4">
+                <span className="text-2xl">
+                  ⛳
+                </span>
+
+                <span>
+                  {submitting ? "Submitting..." : "Submit My Team"}
+                </span>
+              </div>
+            </button>
+          </div>
+
+          <div
+            className="
+              text-center
+              mt-6
+              text-[#666]
+            "
+            style={{
+              fontFamily: "'Oswald', sans-serif",
+              fontSize: ".9rem"
+            }}
+          >
+            Your picks will be saved securely.
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }
