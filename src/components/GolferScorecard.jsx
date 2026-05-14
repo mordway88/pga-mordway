@@ -6,6 +6,47 @@ function sum(values) {
   return values.reduce((total, value) => total + (Number(value) || 0), 0);
 }
 
+function getHoleResult(score, par) {
+  if (score === null || score === undefined || score === "" || !par) return "-";
+  const diff = Number(score) - Number(par);
+  if (!Number.isFinite(diff)) return "-";
+  if (diff <= -2) return "Eagle+";
+  if (diff === -1) return "Birdie";
+  if (diff === 0) return "Par";
+  if (diff === 1) return "Bogey";
+  if (diff >= 2) return "Double+";
+  return "-";
+}
+
+function getEmptyScorecardMessage(golfer, activeRound) {
+  if (!golfer.hasStarted) return `Scorecard appears after tee off. Tee time: ${golfer.teeTime || "TBA"}.`;
+  if (activeRound > (golfer.currentRoundNum || 1)) return `Round ${activeRound} has not started.`;
+  if (golfer.status === "F" || golfer.roundScores?.[activeRound - 1] !== "-") return "Hole-by-hole data is unavailable for this round.";
+  return "Hole-by-hole scorecard is not available yet. Showing total score and status only.";
+}
+
+function MobileNineCard({ title, holes, startIndex }) {
+  return (
+    <div className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
+      <div className="mb-2 font-condensed text-base font-bold uppercase text-white">{title}</div>
+      <div className="grid gap-1.5">
+        {holes.map((score, index) => {
+          const holeNumber = startIndex + index + 1;
+          const par = COURSE_PARS[startIndex + index];
+          return (
+            <div key={holeNumber} className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-2 rounded-md border border-white/10 bg-[#071a15] px-3 py-2 text-sm">
+              <span className="font-condensed font-bold text-white/82">Hole {holeNumber}</span>
+              <span className="text-white/55">Par {par}</span>
+              <span className={`rounded border px-2 py-1 text-center font-bold ${getHoleScoreClass(score, par)}`}>{score || "-"}</span>
+              <span className="text-right text-white/64">{getHoleResult(score, par)}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function GolferScorecard({ golfer, selectedRound, onRoundChange, compact = false }) {
   const [localRound, setLocalRound] = useState(golfer.currentRoundNum || 1);
   const activeRound = selectedRound || localRound;
@@ -22,8 +63,7 @@ export function GolferScorecard({ golfer, selectedRound, onRoundChange, compact 
   if (compact && !hasHoleData) {
     return (
       <div className="border-t border-white/10 bg-[#06130f] px-3 py-2.5 text-sm text-white/62">
-        Scorecard appears after tee off. Round {activeRound} tee time:{" "}
-        <span className="font-semibold text-white/82">{golfer.teeTime || "TBA"}</span>
+        Scorecard appears after tee off. Tee time: <span className="font-semibold text-white/82">{golfer.teeTime || "TBA"}</span>.
       </div>
     );
   }
@@ -45,7 +85,8 @@ export function GolferScorecard({ golfer, selectedRound, onRoundChange, compact 
                 activeRound === round ? "bg-amber-300 text-emerald-950" : "bg-white/10 text-white/70 hover:bg-white/15"
               }`}
             >
-              R{round}
+              <span className="hidden sm:inline">R{round}</span>
+              <span className="sm:hidden">Round {round}</span>
             </button>
           ))}
         </div>
@@ -62,10 +103,15 @@ export function GolferScorecard({ golfer, selectedRound, onRoundChange, compact 
 
       {!hasHoleData ? (
         <div className="rounded-lg border border-white/10 bg-white/[0.04] p-4 text-sm text-white/65">
-          Round {activeRound} scorecard will appear here when shot-by-shot data is available. Tee time: {golfer.teeTime || "TBA"}.
+          {getEmptyScorecardMessage(golfer, activeRound)}
         </div>
       ) : (
-        <div className="overflow-x-auto">
+        <>
+        <div className="grid gap-3 sm:hidden">
+          <MobileNineCard title="Front 9" holes={holes.slice(0, 9)} startIndex={0} />
+          <MobileNineCard title="Back 9" holes={holes.slice(9)} startIndex={9} />
+        </div>
+        <div className="hidden overflow-x-auto sm:block">
           <table className="min-w-[920px] border-separate border-spacing-1 text-center text-sm">
             <tbody>
               <tr>
@@ -104,6 +150,7 @@ export function GolferScorecard({ golfer, selectedRound, onRoundChange, compact 
             </tbody>
           </table>
         </div>
+        </>
       )}
     </div>
   );

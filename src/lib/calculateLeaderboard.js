@@ -19,7 +19,7 @@ function createMissingGolfer(name) {
     normalizedName,
     score: 999,
     displayScore: "NO MATCH",
-    status: "Needs Review",
+    status: "Not matched to live scoring",
     isOut: false,
     isMissing: true,
     isCounting: false,
@@ -80,6 +80,8 @@ export function calculateLeaderboard(entries, golfers, options = {}) {
     const finishedCount = playersData.filter((player) => player.status === "F").length;
     const outCount = playersData.filter((player) => ["CUT", "WD", "DQ"].includes(player.status)).length;
     const nextTeeTime = getNextTeeTime(playersData);
+    const unmatchedPlayers = playersData.filter((player) => player.isMissing);
+    const reviewNeeded = scoringStarted && unmatchedPlayers.length > 0;
 
     return {
       ...entry,
@@ -91,7 +93,8 @@ export function calculateLeaderboard(entries, golfers, options = {}) {
       finishedCount,
       outCount,
       nextTeeTime,
-      unmatchedPlayers: playersData.filter((player) => player.isMissing),
+      unmatchedPlayers,
+      reviewNeeded,
     };
   });
 

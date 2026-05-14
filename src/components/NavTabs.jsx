@@ -1,8 +1,8 @@
 import { BarChart3, Trophy } from "lucide-react";
 
 const navItems = [
-  { id: "pool", label: "Pool Standings", icon: Trophy },
-  { id: "tournament", label: "Tournament", icon: BarChart3 },
+  { id: "pool", label: "Pool Leaderboard", shortLabel: "Pool", icon: Trophy },
+  { id: "tournament", label: "All Golfers", shortLabel: "Golfers", icon: BarChart3 },
 ];
 
 export function NavTabs({ activeView, onChange }) {
@@ -25,7 +25,8 @@ export function NavTabs({ activeView, onChange }) {
               }`}
             >
               <Icon size={16} />
-              {item.label}
+              <span className="hidden sm:inline">{item.label}</span>
+              <span className="sm:hidden">{item.shortLabel}</span>
             </button>
           );
         })}

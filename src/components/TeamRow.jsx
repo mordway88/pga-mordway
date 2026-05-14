@@ -3,10 +3,16 @@ import { ChevronDown, ChevronUp, Sparkles } from "lucide-react";
 import { getScoreTone } from "../lib/scoreTone";
 import { TeamRoster } from "./TeamRoster";
 
+function formatUnmatchedMessage(count) {
+  if (!count) return null;
+  return count === 1 ? "1 golfer not matched to live scoring" : `${count} golfers not matched to live scoring`;
+}
+
 export function TeamRow({ entry, expanded, onToggle, scoringStarted }) {
   const detailText = scoringStarted
     ? `${entry.onCourseCount} on course · ${entry.finishedCount} finished${entry.outCount ? ` · ${entry.outCount} cut/WD/DQ` : ""}`
-    : `First tee time ${entry.nextTeeTime}`;
+    : `Earliest team tee time: ${entry.nextTeeTime}`;
+  const unmatchedMessage = formatUnmatchedMessage(entry.unmatchedPlayers.length);
 
   return (
     <motion.div
@@ -30,12 +36,17 @@ export function TeamRow({ entry, expanded, onToggle, scoringStarted }) {
           </div>
         )}
         <div>
-          <div className="flex items-center gap-2 font-condensed text-xl font-bold uppercase tracking-[0.04em] text-white sm:text-2xl">
+          <div className="flex flex-wrap items-center gap-2 font-condensed text-xl font-bold uppercase tracking-[0.04em] text-white sm:text-2xl">
             {scoringStarted && entry.rank <= 3 && <Sparkles size={15} className="text-amber-200" />}
             {entry.name}
+            {entry.reviewNeeded && (
+              <span className="rounded-full border border-orange-300/50 bg-orange-300/15 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-orange-100">
+                Review needed
+              </span>
+            )}
           </div>
           <div className="mt-0.5 text-[11px] font-bold uppercase tracking-[0.14em] text-white/48">
-            {entry.unmatchedPlayers.length ? `${entry.unmatchedPlayers.length} player not found in live scores` : detailText}
+            {scoringStarted && unmatchedMessage ? unmatchedMessage : detailText}
           </div>
         </div>
         {scoringStarted && (
@@ -43,7 +54,12 @@ export function TeamRow({ entry, expanded, onToggle, scoringStarted }) {
             {entry.displayTotal}
           </div>
         )}
-        {expanded ? <ChevronUp size={22} className="text-amber-200" /> : <ChevronDown size={22} className="text-white/45 transition group-hover:text-white/75" />}
+        <div className="flex items-center justify-end gap-2">
+          <span className={`font-condensed text-xs font-bold uppercase tracking-[0.12em] ${expanded ? "text-amber-200" : "text-white/50 group-hover:text-white/75"}`}>
+            {expanded ? "Hide" : "View team"}
+          </span>
+          {expanded ? <ChevronUp size={22} className="text-amber-200" /> : <ChevronDown size={22} className="text-white/45 transition group-hover:text-white/75" />}
+        </div>
       </button>
       <AnimatePresence>
         {expanded && (
