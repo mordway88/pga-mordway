@@ -23,7 +23,7 @@ export function PoolLeaderboard({ leaderboard, entryMeta, entriesLoading, entryE
           </div>
         )}
         <div className="flex flex-col gap-2">
-          {entriesLoading && (
+          {entriesLoading && !leaderboard.length && (
             <div className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.06] px-4 py-3 text-sm font-bold text-white/70">
               <Loader2 size={16} className="animate-spin" />
               Loading teams

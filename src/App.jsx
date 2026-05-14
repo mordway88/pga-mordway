@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { AlertTriangle, Loader2, RadioTower } from "lucide-react";
 import { NavTabs } from "./components/NavTabs";
@@ -35,6 +35,7 @@ export default function App() {
   const [lastSuccessfulScoreFetchAt, setLastSuccessfulScoreFetchAt] = useState(null);
   const [currentTimeMs, setCurrentTimeMs] = useState(() => new Date().getTime());
   const [testDataMode, setTestDataMode] = useState(false);
+  const lastSuccessfulScoreFetchAtRef = useRef(null);
 
   const loadGolfData = useCallback(async ({ silent = false } = {}) => {
     await Promise.resolve();
@@ -46,6 +47,7 @@ export default function App() {
       setGolfers(result.golfers);
       setTestDataMode(false);
       setLastSuccessfulScoreFetchAt(result.fetchedAt);
+      lastSuccessfulScoreFetchAtRef.current = result.fetchedAt;
       setLastUpdated(formatLastUpdated(new Date(result.fetchedAt)));
     } catch (fetchError) {
       console.error(fetchError);
@@ -54,19 +56,22 @@ export default function App() {
         setGolfers(generateMockGolfers());
         setTestDataMode(true);
         setScoreError("TEST DATA — NOT LIVE SCORES");
-        setLastSuccessfulScoreFetchAt(new Date().toISOString());
+        const fetchedAt = new Date().toISOString();
+        setLastSuccessfulScoreFetchAt(fetchedAt);
+        lastSuccessfulScoreFetchAtRef.current = fetchedAt;
         setLastUpdated(formatLastUpdated());
       } else {
+        const lastGoodFetch = lastSuccessfulScoreFetchAtRef.current;
         setScoreError(
-          lastSuccessfulScoreFetchAt
-            ? `Live scores delayed. Showing last update from ${formatLastUpdated(new Date(lastSuccessfulScoreFetchAt))}. Retrying automatically.`
+          lastGoodFetch
+            ? `Live scores delayed. Showing last update from ${formatLastUpdated(new Date(lastGoodFetch))}. Retrying automatically.`
             : "Live scores are unavailable. Retrying automatically."
         );
       }
     } finally {
       setScoresLoading(false);
     }
-  }, [lastSuccessfulScoreFetchAt]);
+  }, []);
 
   const loadEntries = useCallback(async ({ silent = false } = {}) => {
     await Promise.resolve();
@@ -148,7 +153,7 @@ export default function App() {
             </div>
             <div className="grid gap-1 text-[11px] font-bold uppercase tracking-[0.14em] text-white/55 lg:text-right">
               <span className="inline-flex items-center gap-2 lg:justify-end">
-                {scoresLoading && <Loader2 size={14} className="animate-spin text-amber-200" />}
+                {scoresLoading && !lastUpdated && <Loader2 size={14} className="animate-spin text-amber-200" />}
                 {headerStatusText}
               </span>
               <span className="inline-flex items-center gap-2 lg:justify-end">
