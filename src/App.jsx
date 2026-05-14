@@ -4,6 +4,7 @@ import { AlertTriangle, Loader2, RadioTower } from "lucide-react";
 import { NavTabs } from "./components/NavTabs";
 import { PoolLeaderboard } from "./components/PoolLeaderboard";
 import { TournamentLeaderboard } from "./components/TournamentLeaderboard";
+import { WanamakerTrophy } from "./components/WanamakerTrophy";
 import { calculateLeaderboard } from "./lib/calculateLeaderboard";
 import { fetchEspnGolfData } from "./lib/fetchEspnGolfData";
 import { fetchPoolEntries } from "./lib/fetchPoolEntries";
@@ -154,9 +155,10 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#06130f] text-white">
-      <header className="sticky top-0 z-40 border-b border-amber-200/10 bg-[#04110d]/94 shadow-[0_18px_60px_rgba(0,0,0,.45)] backdrop-blur-xl">
+      <header className="sticky top-0 z-40 overflow-hidden border-b border-amber-200/10 bg-[#04110d]/94 shadow-[0_18px_60px_rgba(0,0,0,.45)] backdrop-blur-xl">
         <div className="broadcast-bar h-1" />
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 lg:px-8">
+        <WanamakerTrophy />
+        <div className="relative z-10 mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 lg:px-8">
           <div className="flex flex-col justify-between gap-2 lg:flex-row lg:items-end">
             <div>
               <p className="font-serif text-[11px] font-bold uppercase tracking-[0.22em] text-amber-200">PGA Championship</p>

@@ -67,6 +67,33 @@ button:disabled {
   background: linear-gradient(135deg, #fde68a 0%, #facc15 48%, #d97706 100%);
 }
 
+.wanamaker-trophy {
+  position: absolute;
+  right: clamp(-1rem, 1.5vw, 1.4rem);
+  top: 0.7rem;
+  width: clamp(5.4rem, 13vw, 10rem);
+  height: clamp(6.8rem, 15vw, 12rem);
+  pointer-events: none;
+  opacity: 0.28;
+  transform: rotate(-6deg);
+  transform-origin: center;
+  z-index: 0;
+}
+
+@media (min-width: 768px) {
+  .wanamaker-trophy {
+    opacity: 0.44;
+  }
+}
+
+@media (max-width: 520px) {
+  .wanamaker-trophy {
+    right: -2.1rem;
+    top: 0.4rem;
+    opacity: 0.2;
+  }
+}
+
 ::selection {
   background: rgba(252, 211, 77, 0.35);
 }
