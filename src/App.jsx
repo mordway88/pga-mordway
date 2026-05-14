@@ -36,6 +36,7 @@ export default function App() {
   const [currentTimeMs, setCurrentTimeMs] = useState(() => new Date().getTime());
   const [testDataMode, setTestDataMode] = useState(false);
   const lastSuccessfulScoreFetchAtRef = useRef(null);
+  const entriesCountRef = useRef(0);
 
   const loadGolfData = useCallback(async ({ silent = false } = {}) => {
     await Promise.resolve();
@@ -81,10 +82,14 @@ export default function App() {
     try {
       const result = await fetchPoolEntries();
       setEntries(result.entries || []);
+      entriesCountRef.current = result.entries?.length || 0;
       setEntryMeta(result);
+      setEntryError(null);
     } catch (fetchError) {
       console.error(fetchError);
-      setEntryError("Could not load pool entries. Retrying automatically.");
+      if (!entriesCountRef.current) {
+        setEntryError("Could not load pool entries. Retrying automatically.");
+      }
     } finally {
       setEntriesLoading(false);
     }

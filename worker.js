@@ -1,6 +1,7 @@
 const SHEET_ID = "1F4iS2djEYYvhBRrkqfmCF94vQ9EFGFas7NmmMr3r64M";
 const SHEET_NAME = "Sheet1";
 const ENTRY_LOCK_ISO = "2026-05-14T03:45:00-07:00";
+const ENTRY_CACHE_URL = "https://pga-cache.local/entries";
 
 function parseCsv(csv) {
   const rows = [];
@@ -64,15 +65,7 @@ function rowToEntry(headers, row, index) {
   };
 }
 
-async function handleEntries() {
-  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    return Response.json({ error: `Google Sheet request failed: ${response.status}` }, { status: 502 });
-  }
-
-  const csv = await response.text();
+function buildEntriesPayload(csv) {
   const [headers, ...rows] = parseCsv(csv);
   const lockDate = new Date(ENTRY_LOCK_ISO);
   const allEntries = rows
@@ -80,22 +73,65 @@ async function handleEntries() {
     .filter((entry) => entry.name && Object.values(entry.picks).some(Boolean));
   const entries = allEntries.filter((entry) => !entry.submittedAt || new Date(entry.submittedAt) <= lockDate);
 
-  return Response.json(
-    {
-      entries,
-      totalRows: allEntries.length,
-      lockedOutRows: allEntries.length - entries.length,
-      locked: new Date() >= lockDate,
-      lockIso: ENTRY_LOCK_ISO,
-      source: "Google Sheets",
-      fetchedAt: new Date().toISOString(),
+  return {
+    entries,
+    totalRows: allEntries.length,
+    lockedOutRows: allEntries.length - entries.length,
+    locked: new Date() >= lockDate,
+    lockIso: ENTRY_LOCK_ISO,
+    source: "Google Sheets",
+    fetchedAt: new Date().toISOString(),
+  };
+}
+
+function jsonResponse(payload, init = {}) {
+  return Response.json(payload, {
+    ...init,
+    headers: {
+      "Cache-Control": "no-store",
+      ...(init.headers || {}),
     },
-    {
+  });
+}
+
+async function readCachedEntries() {
+  const cached = await caches.default.match(ENTRY_CACHE_URL);
+  if (!cached) return null;
+  const payload = await cached.json();
+  return {
+    ...payload,
+    stale: true,
+    source: "Google Sheets cache",
+    warning: "Using the last loaded team list while Google Sheets is temporarily unavailable.",
+  };
+}
+
+async function writeCachedEntries(payload) {
+  await caches.default.put(
+    ENTRY_CACHE_URL,
+    Response.json(payload, {
       headers: {
-        "Cache-Control": "no-store",
+        "Cache-Control": "public, max-age=3600",
       },
-    },
+    }),
   );
+}
+
+async function handleEntries() {
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    const cachedPayload = await readCachedEntries();
+    if (cachedPayload) return jsonResponse(cachedPayload);
+    return jsonResponse({ error: `Google Sheet request failed: ${response.status}` }, { status: 502 });
+  }
+
+  const csv = await response.text();
+  const payload = buildEntriesPayload(csv);
+  await writeCachedEntries(payload);
+
+  return jsonResponse(payload);
 }
 
 export default {
