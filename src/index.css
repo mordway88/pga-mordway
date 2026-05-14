@@ -88,9 +88,11 @@ button:disabled {
 
 @media (max-width: 520px) {
   .wanamaker-trophy {
-    right: -2.1rem;
-    top: 0.4rem;
-    opacity: 0.2;
+    right: 0.55rem;
+    top: 1.35rem;
+    width: 4.75rem;
+    height: 6rem;
+    opacity: 0.18;
   }
 }
 
