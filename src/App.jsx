@@ -115,13 +115,21 @@ export default function App() {
   const scoringStarted = useMemo(() => {
     return hasTournamentStarted() || golfers.some((golfer) => golfer.status === "F" || /^Thru/i.test(golfer.status || "") || golfer.todayScore !== "-");
   }, [golfers]);
+  const tournamentFinished = useMemo(() => {
+    return Boolean(
+      scoringStarted &&
+        golfers.length &&
+        golfers.some((golfer) => golfer.currentRoundNum >= 4 || golfer.roundScores?.[3] !== "-") &&
+        golfers.every((golfer) => golfer.status === "F" || golfer.isOut),
+    );
+  }, [golfers, scoringStarted]);
   const staleScores = Boolean(
     scoringStarted &&
       lastSuccessfulScoreFetchAt &&
       currentTimeMs &&
       currentTimeMs - new Date(lastSuccessfulScoreFetchAt).getTime() > STALE_SCORE_MS
   );
-  const headerStatus = testDataMode ? "TEST DATA" : scoreError && !lastSuccessfulScoreFetchAt ? "ERROR" : staleScores ? "STALE" : scoringStarted ? "LIVE" : "TEE TIMES";
+  const headerStatus = testDataMode ? "TEST DATA" : scoreError && !lastSuccessfulScoreFetchAt ? "ERROR" : staleScores ? "STALE" : tournamentFinished ? "FINAL" : scoringStarted ? "LIVE" : "TEE TIMES";
   const headerStatusText = testDataMode
     ? "TEST DATA · Not live scores"
     : headerStatus === "ERROR"
