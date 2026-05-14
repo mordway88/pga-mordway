@@ -76,7 +76,7 @@ export function calculateLeaderboard(entries, golfers, options = {}) {
 
     const countingPlayers = playersData.filter((player) => player.isCounting).slice(0, COUNTING_PLAYERS);
     const totalScore = countingPlayers.reduce((sum, player) => sum + player.score, 0);
-    const onCourseCount = playersData.filter((player) => /^Thru/i.test(player.status || "")).length;
+    const onCourseCount = playersData.filter((player) => player.hasStarted && player.status !== "F" && !player.isOut).length;
     const finishedCount = playersData.filter((player) => player.status === "F").length;
     const outCount = playersData.filter((player) => ["CUT", "WD", "DQ"].includes(player.status)).length;
     const nextTeeTime = getNextTeeTime(playersData);

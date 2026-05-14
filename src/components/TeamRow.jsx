@@ -10,8 +10,13 @@ function formatUnmatchedMessage(count) {
 
 export function TeamRow({ entry, expanded, onToggle, scoringStarted }) {
   const hasTeamActivity = entry.onCourseCount > 0 || entry.finishedCount > 0 || entry.outCount > 0;
+  const activityText = [
+    entry.onCourseCount > 0 ? `${entry.onCourseCount} on course` : null,
+    entry.finishedCount > 0 ? `${entry.finishedCount} finished` : null,
+    entry.outCount > 0 ? `${entry.outCount} cut/WD/DQ` : null,
+  ].filter(Boolean).join(" · ");
   const detailText = scoringStarted && hasTeamActivity
-    ? `${entry.onCourseCount} on course · ${entry.finishedCount} finished${entry.outCount ? ` · ${entry.outCount} cut/WD/DQ` : ""}`
+    ? activityText
     : `Earliest team tee time: ${entry.nextTeeTime}`;
   const unmatchedMessage = formatUnmatchedMessage(entry.unmatchedPlayers.length);
 

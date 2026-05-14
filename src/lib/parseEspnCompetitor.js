@@ -60,6 +60,10 @@ function parseHoleByHole(linescores = []) {
   }, {});
 }
 
+function getActiveRound(linescores = []) {
+  return [...linescores].reverse().find((round) => Array.isArray(round?.linescores) && round.linescores.length > 0) || null;
+}
+
 export function parseEspnCompetitor(competitor) {
   const athlete = competitor?.athlete || competitor?.competitor || competitor;
   const name = pickFirst(athlete?.displayName, athlete?.fullName, athlete?.name, competitor?.displayName, competitor?.name, "Unknown Golfer");
@@ -79,13 +83,16 @@ export function parseEspnCompetitor(competitor) {
   const score = parseGolfScore(scoreStr);
   const override = MANUAL_SCORE_OVERRIDES[normalizedName];
   const linescores = competitor?.linescores || [];
-  const currentRoundNum = Number(pickFirst(competitor?.curatedRank?.currentPeriod, competitor?.currentPeriod, 1));
+  const activeRound = getActiveRound(linescores);
+  const currentRoundNum = Number(pickFirst(competitor?.curatedRank?.currentPeriod, competitor?.currentPeriod, activeRound?.period, 1));
+  const holesPlayed = activeRound?.linescores?.length || 0;
   const thru = pickFirst(competitor?.status?.period, competitor?.thru, competitor?.currentHole);
   const isOut = ["CUT", "WD", "DQ"].includes(detectedStatus);
   const staticTeeTime = getStaticTeeTime(normalizedName, getCurrentRoundForSchedule());
   const teeTime = extractTeeTime(competitor);
   const displayTeeTime = teeTime === "TBA" ? staticTeeTime?.displayTime || "TBA" : teeTime;
-  const status = detectedStatus || (thru ? `Thru ${thru}` : competitor?.status?.type?.completed ? "F" : `Starts ${displayTeeTime}`);
+  const status = detectedStatus || (thru ? `Thru ${thru}` : holesPlayed >= 18 || competitor?.status?.type?.completed ? "F" : holesPlayed > 0 ? `Thru ${holesPlayed}` : `Starts ${displayTeeTime}`);
+  const todayScore = pickFirst(competitor?.todayScore, competitor?.score?.today, activeRound?.displayValue, competitor?.status?.displayValue, "-");
 
   return {
     name,
@@ -98,7 +105,7 @@ export function parseEspnCompetitor(competitor) {
     holeByHole: parseHoleByHole(linescores),
     roundScores: parseRoundScores(linescores),
     currentRoundNum,
-    todayScore: pickFirst(competitor?.todayScore, competitor?.score?.today, competitor?.status?.displayValue, "-"),
+    todayScore,
     teeTime: displayTeeTime,
     teeTimeSourceIso: staticTeeTime?.iso || null,
     scheduledRound: staticTeeTime?.round || getCurrentRoundForSchedule(),
