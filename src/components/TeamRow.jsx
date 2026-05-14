@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, ChevronUp, Sparkles } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { getScoreTone } from "../lib/scoreTone";
 import { TeamRoster } from "./TeamRoster";
 
@@ -9,7 +9,8 @@ function formatUnmatchedMessage(count) {
 }
 
 export function TeamRow({ entry, expanded, onToggle, scoringStarted }) {
-  const detailText = scoringStarted
+  const hasTeamActivity = entry.onCourseCount > 0 || entry.finishedCount > 0 || entry.outCount > 0;
+  const detailText = scoringStarted && hasTeamActivity
     ? `${entry.onCourseCount} on course · ${entry.finishedCount} finished${entry.outCount ? ` · ${entry.outCount} cut/WD/DQ` : ""}`
     : `Earliest team tee time: ${entry.nextTeeTime}`;
   const unmatchedMessage = formatUnmatchedMessage(entry.unmatchedPlayers.length);
@@ -37,7 +38,6 @@ export function TeamRow({ entry, expanded, onToggle, scoringStarted }) {
         )}
         <div>
           <div className="flex flex-wrap items-center gap-2 font-condensed text-xl font-bold uppercase tracking-[0.04em] text-white sm:text-2xl">
-            {scoringStarted && entry.rank <= 3 && <Sparkles size={15} className="text-amber-200" />}
             {entry.name}
             {entry.reviewNeeded && (
               <span className="rounded-full border border-orange-300/50 bg-orange-300/15 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-orange-100">
