@@ -1,0 +1,112 @@
+import { COUNTING_PLAYERS } from "./constants";
+import { formatScore } from "./formatScore";
+import { normalizeName } from "./normalizeName";
+import { getCurrentRoundForSchedule, getStaticTeeTime } from "./teeTimes";
+
+export function getEntryPlayers(entry) {
+  if (Array.isArray(entry.players)) return entry.players;
+  if (!entry.picks) return [];
+
+  return Array.from({ length: 14 }, (_, index) => entry.picks[`group${index + 1}`]).filter(Boolean);
+}
+
+function createMissingGolfer(name) {
+  const normalizedName = normalizeName(name);
+  const staticTeeTime = getStaticTeeTime(normalizedName, getCurrentRoundForSchedule());
+
+  return {
+    name,
+    normalizedName,
+    score: 999,
+    displayScore: "NO MATCH",
+    status: "Needs Review",
+    isOut: false,
+    isMissing: true,
+    isCounting: false,
+    holeByHole: {},
+    roundScores: ["-", "-", "-", "-"],
+    todayScore: "-",
+    teeTime: staticTeeTime?.displayTime || "TBA",
+    teeTimeSourceIso: staticTeeTime?.iso || null,
+    scheduledRound: staticTeeTime?.round || getCurrentRoundForSchedule(),
+  };
+}
+
+function hasStartedGolf(golfer) {
+  return golfer.isOut || golfer.status === "F" || /^Thru/i.test(golfer.status || "") || golfer.todayScore !== "-" || golfer.roundScores.some((score) => score !== "-");
+}
+
+function getNextTeeTime(playersData) {
+  const scheduled = playersData
+    .map((player) => ({
+      player,
+      time: player.teeTime,
+      sortable: Date.parse(player.teeTimeSourceIso || player.teeTimeIso || ""),
+    }))
+    .filter((item) => item.time && item.time !== "TBA");
+
+  scheduled.sort((a, b) => {
+    if (Number.isFinite(a.sortable) && Number.isFinite(b.sortable)) return a.sortable - b.sortable;
+    return a.time.localeCompare(b.time);
+  });
+
+  return scheduled[0]?.time || "Tee times ready";
+}
+
+export function calculateLeaderboard(entries, golfers, options = {}) {
+  const scoringStarted = Boolean(options.scoringStarted);
+  const normalizedGolfers = new Map(golfers.map((golfer) => [golfer.normalizedName, golfer]));
+
+  const calculatedEntries = entries.map((entry) => {
+    const playersData = getEntryPlayers(entry)
+      .map((playerName, index) => {
+        const normalizedName = normalizeName(playerName);
+        const live = normalizedGolfers.get(normalizedName);
+        return live ? { ...live, name: playerName, groupNumber: index + 1 } : { ...createMissingGolfer(playerName), groupNumber: index + 1 };
+      });
+
+    if (scoringStarted) {
+      playersData.sort((a, b) => a.score - b.score || a.groupNumber - b.groupNumber);
+    }
+
+    playersData.forEach((player, index) => {
+      player.isCounting = scoringStarted && !player.isMissing && index < COUNTING_PLAYERS;
+      player.hasStarted = hasStartedGolf(player);
+    });
+
+    const countingPlayers = playersData.filter((player) => player.isCounting).slice(0, COUNTING_PLAYERS);
+    const totalScore = countingPlayers.reduce((sum, player) => sum + player.score, 0);
+    const onCourseCount = playersData.filter((player) => /^Thru/i.test(player.status || "")).length;
+    const finishedCount = playersData.filter((player) => player.status === "F").length;
+    const outCount = playersData.filter((player) => ["CUT", "WD", "DQ"].includes(player.status)).length;
+    const nextTeeTime = getNextTeeTime(playersData);
+
+    return {
+      ...entry,
+      playersData,
+      totalScore: scoringStarted ? totalScore : null,
+      displayTotal: scoringStarted ? formatScore(totalScore) : "Not started",
+      scoringStarted,
+      onCourseCount,
+      finishedCount,
+      outCount,
+      nextTeeTime,
+      unmatchedPlayers: playersData.filter((player) => player.isMissing),
+    };
+  });
+
+  calculatedEntries.sort((a, b) => {
+    if (!scoringStarted) return a.name.localeCompare(b.name);
+    return a.totalScore - b.totalScore || a.name.localeCompare(b.name);
+  });
+
+  calculatedEntries.forEach((entry, index) => {
+    entry.rank = !scoringStarted
+      ? index + 1
+      : index > 0 && entry.totalScore === calculatedEntries[index - 1].totalScore
+      ? calculatedEntries[index - 1].rank
+      : index + 1;
+  });
+
+  return calculatedEntries;
+}

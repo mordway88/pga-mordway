@@ -1,10 +1,6 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import tailwindcss from "@tailwindcss/vite";
-
-const sheetId = "1F4iS2djEYYvhBRrkqfmCF94vQ9EFGFas7NmmMr3r64M";
-const sheetName = "Sheet1";
-const entryLockIso = "2026-05-14T03:45:00-07:00";
+const SHEET_ID = "1F4iS2djEYYvhBRrkqfmCF94vQ9EFGFas7NmmMr3r64M";
+const SHEET_NAME = "Sheet1";
+const ENTRY_LOCK_ISO = "2026-05-14T03:45:00-07:00";
 
 function parseCsv(csv) {
   const rows = [];
@@ -68,45 +64,44 @@ function rowToEntry(headers, row, index) {
   };
 }
 
-function sheetEntriesDevApi() {
-  return {
-    name: "sheet-entries-dev-api",
-    configureServer(server) {
-      server.middlewares.use("/api/entries", async (_request, response) => {
-        try {
-          const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
-          const sheetResponse = await fetch(url);
-          const csv = await sheetResponse.text();
-          const [headers, ...rows] = parseCsv(csv);
-          const lockDate = new Date(entryLockIso);
-          const allEntries = rows
-            .map((row, index) => rowToEntry(headers, row, index + 1))
-            .filter((entry) => entry.name && Object.values(entry.picks).some(Boolean));
-          const entries = allEntries.filter((entry) => !entry.submittedAt || new Date(entry.submittedAt) <= lockDate);
+async function handleEntries() {
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
+  const response = await fetch(url);
 
-          response.setHeader("Content-Type", "application/json");
-          response.end(JSON.stringify({
-            entries,
-            totalRows: allEntries.length,
-            lockedOutRows: allEntries.length - entries.length,
-            locked: new Date() >= lockDate,
-            lockIso: entryLockIso,
-            source: "Google Sheets",
-            fetchedAt: new Date().toISOString(),
-          }));
-        } catch (error) {
-          response.statusCode = 500;
-          response.end(JSON.stringify({ error: error.message }));
-        }
-      });
+  if (!response.ok) {
+    return Response.json({ error: `Google Sheet request failed: ${response.status}` }, { status: 502 });
+  }
+
+  const csv = await response.text();
+  const [headers, ...rows] = parseCsv(csv);
+  const lockDate = new Date(ENTRY_LOCK_ISO);
+  const allEntries = rows
+    .map((row, index) => rowToEntry(headers, row, index + 1))
+    .filter((entry) => entry.name && Object.values(entry.picks).some(Boolean));
+  const entries = allEntries.filter((entry) => !entry.submittedAt || new Date(entry.submittedAt) <= lockDate);
+
+  return Response.json(
+    {
+      entries,
+      totalRows: allEntries.length,
+      lockedOutRows: allEntries.length - entries.length,
+      locked: new Date() >= lockDate,
+      lockIso: ENTRY_LOCK_ISO,
+      source: "Google Sheets",
+      fetchedAt: new Date().toISOString(),
     },
-  };
+    {
+      headers: {
+        "Cache-Control": "no-store",
+      },
+    },
+  );
 }
 
-export default defineConfig({
-  plugins: [
-    sheetEntriesDevApi(),
-    react(),
-    tailwindcss(),
-  ],
-});
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    if (url.pathname === "/api/entries") return handleEntries();
+    return env.ASSETS.fetch(request);
+  },
+};
