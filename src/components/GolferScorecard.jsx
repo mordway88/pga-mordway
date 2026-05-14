@@ -34,11 +34,15 @@ function MobileNineCard({ title, holes, startIndex }) {
           const holeNumber = startIndex + index + 1;
           const par = COURSE_PARS[startIndex + index];
           return (
-            <div key={holeNumber} className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-2 rounded-md border border-white/10 bg-[#071a15] px-3 py-2 text-sm">
-              <span className="font-condensed font-bold text-white/82">Hole {holeNumber}</span>
-              <span className="text-white/55">Par {par}</span>
-              <span className={`rounded border px-2 py-1 text-center font-bold ${getHoleScoreClass(score, par)}`}>{score || "-"}</span>
-              <span className="text-right text-white/64">{getHoleResult(score, par)}</span>
+            <div key={holeNumber} className="grid grid-cols-[minmax(0,1fr)_128px] items-center gap-3 rounded-md border border-white/10 bg-[#071a15] px-3 py-2 text-sm">
+              <div className="flex min-w-0 items-baseline gap-3">
+                <span className="font-condensed font-bold text-white/82">Hole {holeNumber}</span>
+                <span className="text-white/55">Par {par}</span>
+              </div>
+              <div className="grid grid-cols-[52px_64px] items-center gap-3">
+                <span className={`grid h-9 w-9 place-items-center justify-self-end rounded border text-center font-bold ${getHoleScoreClass(score, par)}`}>{score || "-"}</span>
+                <span className="text-left text-white/64">{getHoleResult(score, par)}</span>
+              </div>
             </div>
           );
         })}
