@@ -114,11 +114,11 @@ export function GolferScorecard({ golfer, selectedRound, onRoundChange, compact 
         </div>
       ) : (
         <>
-        <div className="grid gap-3 sm:hidden">
+        <div className="grid gap-3 xl:hidden">
           <MobileNineCard title="Front 9" holes={holes.slice(0, 9)} startIndex={0} />
           <MobileNineCard title="Back 9" holes={holes.slice(9)} startIndex={9} />
         </div>
-        <div className="scorecard-scroll hidden max-w-full overflow-x-auto overscroll-x-contain rounded-lg border border-white/10 bg-[#06130f]/70 p-2 sm:block">
+        <div className="scorecard-scroll hidden max-w-full overflow-x-auto overscroll-x-contain rounded-lg border border-white/10 bg-[#06130f]/70 p-2 xl:block">
           <table className="w-max min-w-[900px] border-separate border-spacing-1 text-center text-sm">
             <tbody>
               <tr>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { AlertTriangle, Loader2, Search, Users, X } from "lucide-react";
 import { TeamRow } from "./TeamRow";
+import { PrizeWatch } from "./PrizeWatch";
 
 export function PoolLeaderboard({ leaderboard, entryMeta, entriesLoading, entryError, scoringStarted }) {
   const [expandedTeamId, setExpandedTeamId] = useState(leaderboard[0]?.id || null);
@@ -44,6 +45,8 @@ export function PoolLeaderboard({ leaderboard, entryMeta, entriesLoading, entryE
           Tap a team to view its golfers. Live rankings begin automatically when scores post.
         </div>
       )}
+
+      <PrizeWatch leaderboard={leaderboard} scoringStarted={scoringStarted} />
 
       <div className="mb-3 rounded-lg border border-white/10 bg-white/[0.055] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,.05)] sm:p-3">
         <label htmlFor="team-search" className="mb-2 block text-[11px] font-bold uppercase tracking-[0.14em] text-white/55">
