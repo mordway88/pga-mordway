@@ -67,6 +67,24 @@ button:disabled {
   background: linear-gradient(135deg, #fde68a 0%, #facc15 48%, #d97706 100%);
 }
 
+.scorecard-scroll {
+  scrollbar-gutter: stable;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scorecard-scroll::-webkit-scrollbar {
+  height: 12px;
+}
+
+.scorecard-scroll::-webkit-scrollbar-thumb {
+  background: rgba(252, 211, 77, 0.55);
+  border: 3px solid rgba(6, 19, 15, 0.95);
+}
+
+.scorecard-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.08);
+}
+
 .wanamaker-trophy {
   position: absolute;
   right: clamp(-1rem, 1.5vw, 1.4rem);

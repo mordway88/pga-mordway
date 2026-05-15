@@ -118,22 +118,22 @@ export function GolferScorecard({ golfer, selectedRound, onRoundChange, compact 
           <MobileNineCard title="Front 9" holes={holes.slice(0, 9)} startIndex={0} />
           <MobileNineCard title="Back 9" holes={holes.slice(9)} startIndex={9} />
         </div>
-        <div className="hidden overflow-x-auto sm:block">
-          <table className="min-w-[920px] border-separate border-spacing-1 text-center text-sm">
+        <div className="scorecard-scroll hidden max-w-full overflow-x-auto overscroll-x-contain rounded-lg border border-white/10 bg-[#06130f]/70 p-2 sm:block">
+          <table className="w-max min-w-[900px] border-separate border-spacing-1 text-center text-sm">
             <tbody>
               <tr>
-                <th className="sticky left-0 bg-[#05120f] px-2 py-2 text-left font-condensed uppercase tracking-[0.12em] text-white/55">Hole</th>
+                <th className="sticky left-0 z-10 min-w-24 rounded bg-[#05120f] px-2 py-2 text-left font-condensed uppercase tracking-[0.12em] text-white/55 shadow-[8px_0_14px_rgba(0,0,0,.35)]">Hole</th>
                 {COURSE_PARS.map((_, index) => (
-                  <th key={`hole-${index + 1}`} className="w-11 rounded bg-white/10 px-2 py-2 font-condensed text-white">
+                  <th key={`hole-${index + 1}`} className="w-10 rounded bg-white/10 px-2 py-2 font-condensed text-white">
                     {index + 1}
                   </th>
                 ))}
-                <th className="rounded bg-white/10 px-3 py-2 font-condensed text-white">OUT</th>
-                <th className="rounded bg-white/10 px-3 py-2 font-condensed text-white">IN</th>
-                <th className="rounded bg-amber-300 px-3 py-2 font-condensed text-emerald-950">TOT</th>
+                <th className="rounded bg-white/10 px-2 py-2 font-condensed text-white">OUT</th>
+                <th className="rounded bg-white/10 px-2 py-2 font-condensed text-white">IN</th>
+                <th className="rounded bg-amber-300 px-2 py-2 font-condensed text-emerald-950">TOT</th>
               </tr>
               <tr>
-                <th className="sticky left-0 bg-[#05120f] px-2 py-2 text-left font-condensed uppercase tracking-[0.12em] text-white/55">Par</th>
+                <th className="sticky left-0 z-10 min-w-24 rounded bg-[#05120f] px-2 py-2 text-left font-condensed uppercase tracking-[0.12em] text-white/55 shadow-[8px_0_14px_rgba(0,0,0,.35)]">Par</th>
                 {COURSE_PARS.map((par, index) => (
                   <td key={`par-${index + 1}`} className="rounded border border-white/10 bg-white/[0.04] px-2 py-2 text-white/70">
                     {par}
@@ -144,7 +144,7 @@ export function GolferScorecard({ golfer, selectedRound, onRoundChange, compact 
                 <td className="rounded border border-white/10 bg-white/[0.04] text-white/70">{TOTAL_PAR}</td>
               </tr>
               <tr>
-                <th className="sticky left-0 bg-[#05120f] px-2 py-2 text-left font-condensed uppercase tracking-[0.12em] text-white/55">Score</th>
+                <th className="sticky left-0 z-10 min-w-24 rounded bg-[#05120f] px-2 py-2 text-left font-condensed uppercase tracking-[0.12em] text-white/55 shadow-[8px_0_14px_rgba(0,0,0,.35)]">Score</th>
                 {holes.map((score, index) => (
                   <td key={`score-${index + 1}`} className={`rounded border px-2 py-2 ${getHoleScoreClass(score, COURSE_PARS[index])}`}>
                     {score || "-"}
