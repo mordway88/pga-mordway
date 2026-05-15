@@ -64,6 +64,10 @@ function getActiveRound(linescores = []) {
   return [...linescores].reverse().find((round) => Array.isArray(round?.linescores) && round.linescores.length > 0) || null;
 }
 
+function getRound(linescores = [], roundNumber) {
+  return linescores.find((round) => Number(round?.period ?? 0) === Number(roundNumber)) || null;
+}
+
 export function parseEspnCompetitor(competitor) {
   const athlete = competitor?.athlete || competitor?.competitor || competitor;
   const name = pickFirst(athlete?.displayName, athlete?.fullName, athlete?.name, competitor?.displayName, competitor?.name, "Unknown Golfer");
@@ -84,30 +88,50 @@ export function parseEspnCompetitor(competitor) {
   const override = MANUAL_SCORE_OVERRIDES[normalizedName];
   const linescores = competitor?.linescores || [];
   const activeRound = getActiveRound(linescores);
-  const currentRoundNum = Number(pickFirst(competitor?.curatedRank?.currentPeriod, competitor?.currentPeriod, activeRound?.period, 1));
-  const holesPlayed = activeRound?.linescores?.length || 0;
+  const scheduledRound = getCurrentRoundForSchedule();
+  const currentRound = getRound(linescores, scheduledRound);
+  const currentRoundHolesPlayed = currentRound?.linescores?.length || 0;
   const thru = pickFirst(competitor?.status?.period, competitor?.thru, competitor?.currentHole);
   const isOut = ["CUT", "WD", "DQ"].includes(detectedStatus);
-  const staticTeeTime = getStaticTeeTime(normalizedName, getCurrentRoundForSchedule());
+  const staticTeeTime = getStaticTeeTime(normalizedName, scheduledRound, { allowFallback: false });
   const teeTime = extractTeeTime(competitor);
   const displayTeeTime = teeTime === "TBA" ? staticTeeTime?.displayTime || "TBA" : teeTime;
-  const status = detectedStatus || (thru ? `Thru ${thru}` : holesPlayed >= 18 || competitor?.status?.type?.completed ? "F" : holesPlayed > 0 ? `Thru ${holesPlayed}` : `Starts ${displayTeeTime}`);
-  const todayScore = pickFirst(competitor?.todayScore, competitor?.score?.today, activeRound?.displayValue, competitor?.status?.displayValue, "-");
+  const activeRoundNumber = Number(activeRound?.period ?? 0);
+  const statusThru = activeRoundNumber === scheduledRound ? thru : null;
+  const currentRoundFinished = currentRoundHolesPlayed >= 18 || (activeRoundNumber === scheduledRound && competitor?.status?.type?.completed);
+  const playState = detectedStatus
+    ? "out"
+    : currentRoundFinished
+      ? "finishedToday"
+      : currentRoundHolesPlayed > 0 || statusThru
+        ? "onCourse"
+        : "notStartedToday";
+  const status = override?.status ?? detectedStatus ?? (
+    playState === "finishedToday"
+      ? "F"
+      : playState === "onCourse"
+        ? `Thru ${statusThru || currentRoundHolesPlayed}`
+        : `Starts ${displayTeeTime}`
+  );
+  const todayScore = playState === "notStartedToday"
+    ? "-"
+    : pickFirst(competitor?.todayScore, competitor?.score?.today, currentRound?.displayValue, competitor?.status?.displayValue, "-");
 
   return {
     name,
     normalizedName,
     score: override?.score ?? score ?? 999,
     displayScore: override?.displayScore ?? (score === null ? detectedStatus || "-" : formatScore(score)),
-    status: override?.status ?? status,
+    status,
+    playState,
     isOut,
     isMissing: false,
     holeByHole: parseHoleByHole(linescores),
     roundScores: parseRoundScores(linescores),
-    currentRoundNum,
+    currentRoundNum: scheduledRound,
     todayScore,
     teeTime: displayTeeTime,
     teeTimeSourceIso: staticTeeTime?.iso || null,
-    scheduledRound: staticTeeTime?.round || getCurrentRoundForSchedule(),
+    scheduledRound,
   };
 }

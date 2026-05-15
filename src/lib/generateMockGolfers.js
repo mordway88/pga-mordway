@@ -1,10 +1,11 @@
 import { playerGroups } from "../data/playerGroups";
+import { COURSE_PARS } from "../data/coursePars";
 import { formatScore } from "./formatScore";
 import { normalizeName } from "./normalizeName";
 
 function mockRound(score, seed) {
   return Array.from({ length: 18 }, (_, index) => {
-    const par = [4, 4, 4, 4, 3, 4, 4, 5, 4, 4, 4, 3, 4, 5, 4, 3, 4, 4][index];
+    const par = COURSE_PARS[index];
     const roll = (seed + index * 7 + score) % 13;
     if (roll === 0) return par - 2;
     if (roll <= 3) return par - 1;
@@ -19,6 +20,7 @@ export function generateMockGolfers() {
   return uniquePlayers.map((name, index) => {
     const score = ((index * 7) % 17) - 8;
     const status = index % 19 === 0 ? "CUT" : index % 13 === 0 ? "F" : `Thru ${(index % 17) + 1}`;
+    const playState = status === "CUT" ? "out" : status === "F" ? "finishedToday" : "onCourse";
     const today = ((index * 5) % 7) - 3;
 
     return {
@@ -27,6 +29,7 @@ export function generateMockGolfers() {
       score,
       displayScore: formatScore(score),
       status,
+      playState,
       isOut: status === "CUT",
       isMissing: false,
       holeByHole: {

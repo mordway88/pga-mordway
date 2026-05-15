@@ -41,10 +41,13 @@ export function getCurrentRoundForSchedule(now = new Date()) {
     timeZone: "America/Los_Angeles",
   }).format(now);
 
+  if (pacific === "05/17") return 4;
+  if (pacific === "05/16") return 3;
   if (pacific === "05/15") return 2;
   return 1;
 }
 
-export function getStaticTeeTime(normalizedName, round = getCurrentRoundForSchedule()) {
-  return teeTimeMap.get(`${round}:${normalizedName}`) || teeTimeMap.get(`1:${normalizedName}`) || null;
+export function getStaticTeeTime(normalizedName, round = getCurrentRoundForSchedule(), options = {}) {
+  const { allowFallback = true } = options;
+  return teeTimeMap.get(`${round}:${normalizedName}`) || (allowFallback ? teeTimeMap.get(`1:${normalizedName}`) : null) || null;
 }

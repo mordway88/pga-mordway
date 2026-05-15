@@ -18,6 +18,15 @@ const STATUS_BADGE_CLASSES = {
   DQ: "border-orange-300/60 bg-orange-500/15 text-orange-100",
 };
 
+function getGolferStatusLine(golfer, scoringStarted) {
+  if (OUT_STATUS_LABELS[golfer.status]) return OUT_STATUS_LABELS[golfer.status];
+  if (!scoringStarted) return golfer.status || golfer.teeTime || "TBA";
+  if (golfer.playState === "onCourse") return `${golfer.status} · Today ${golfer.todayScore}`;
+  if (golfer.playState === "finishedToday") return `Finished today · Today ${golfer.todayScore}`;
+  if (golfer.playState === "notStartedToday") return `Tee time ${golfer.teeTime || "TBA"}`;
+  return golfer.status || "Not started";
+}
+
 function getTournamentRank(golfers, index) {
   const tiedWithPrevious = index > 0 && golfers[index - 1].score === golfers[index].score;
   const tiedWithNext = index < golfers.length - 1 && golfers[index + 1].score === golfers[index].score;
@@ -96,7 +105,7 @@ export function TournamentLeaderboard({ golfers, entries, scoringStarted }) {
                     )}
                   </div>
                   <div className="text-xs font-bold uppercase tracking-[0.14em] text-white/45">
-                    {OUT_STATUS_LABELS[golfer.status] || golfer.status}{scoringStarted ? ` · Today ${golfer.todayScore}` : ""}
+                    {getGolferStatusLine(golfer, scoringStarted)}
                   </div>
                 </div>
                 <div className={`font-condensed text-3xl font-black ${getScoreTone(golfer.score)}`}>{golfer.displayScore}</div>

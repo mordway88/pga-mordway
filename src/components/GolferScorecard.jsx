@@ -19,6 +19,9 @@ function getHoleResult(score, par) {
 }
 
 function getEmptyScorecardMessage(golfer, activeRound) {
+  if (golfer.playState === "notStartedToday" && activeRound === golfer.currentRoundNum) {
+    return `Round ${activeRound} scorecard appears after tee off. Tee time: ${golfer.teeTime || "TBA"}.`;
+  }
   if (!golfer.hasStarted) return `Scorecard appears after tee off. Tee time: ${golfer.teeTime || "TBA"}.`;
   if (activeRound > (golfer.currentRoundNum || 1)) return `Round ${activeRound} has not started.`;
   if (golfer.status === "F" || golfer.roundScores?.[activeRound - 1] !== "-") return "Hole-by-hole data is unavailable for this round.";

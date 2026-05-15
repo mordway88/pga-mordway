@@ -12,7 +12,8 @@ export function getEntryPlayers(entry) {
 
 function createMissingGolfer(name) {
   const normalizedName = normalizeName(name);
-  const staticTeeTime = getStaticTeeTime(normalizedName, getCurrentRoundForSchedule());
+  const scheduledRound = getCurrentRoundForSchedule();
+  const staticTeeTime = getStaticTeeTime(normalizedName, scheduledRound, { allowFallback: false });
 
   return {
     name,
@@ -20,6 +21,7 @@ function createMissingGolfer(name) {
     score: 999,
     displayScore: "NO MATCH",
     status: "Not matched to live scoring",
+    playState: "missing",
     isOut: false,
     isMissing: true,
     isCounting: false,
@@ -28,7 +30,7 @@ function createMissingGolfer(name) {
     todayScore: "-",
     teeTime: staticTeeTime?.displayTime || "TBA",
     teeTimeSourceIso: staticTeeTime?.iso || null,
-    scheduledRound: staticTeeTime?.round || getCurrentRoundForSchedule(),
+    scheduledRound,
   };
 }
 
@@ -76,8 +78,8 @@ export function calculateLeaderboard(entries, golfers, options = {}) {
 
     const countingPlayers = playersData.filter((player) => player.isCounting).slice(0, COUNTING_PLAYERS);
     const totalScore = countingPlayers.reduce((sum, player) => sum + player.score, 0);
-    const onCourseCount = playersData.filter((player) => player.hasStarted && player.status !== "F" && !player.isOut).length;
-    const finishedCount = playersData.filter((player) => player.status === "F").length;
+    const onCourseCount = playersData.filter((player) => player.playState === "onCourse").length;
+    const finishedCount = playersData.filter((player) => player.playState === "finishedToday").length;
     const outCount = playersData.filter((player) => ["CUT", "WD", "DQ"].includes(player.status)).length;
     const nextTeeTime = getNextTeeTime(playersData);
     const unmatchedPlayers = playersData.filter((player) => player.isMissing);

@@ -105,6 +105,7 @@ export function generateSimulatedGolfers(stage = "pre") {
         score: 0,
         displayScore: "E",
         status: `Starts ${staticTeeTime?.displayTime || "TBA"}`,
+        playState: "notStartedToday",
         isOut: false,
         isMissing: false,
         holeByHole: {},
@@ -125,6 +126,7 @@ export function generateSimulatedGolfers(stage = "pre") {
         ? "F"
         : `Thru ${stageConfig.holesPlayed}`;
     const status = cutStatus || activeStatus;
+    const playState = cutStatus ? "out" : activeStatus === "F" ? "finishedToday" : "onCourse";
 
     return {
       name,
@@ -132,6 +134,7 @@ export function generateSimulatedGolfers(stage = "pre") {
       score: cutStatus ? totalScore + 30 : totalScore,
       displayScore: cutStatus ? cutStatus : formatScore(totalScore),
       status,
+      playState,
       isOut: Boolean(cutStatus),
       isMissing: false,
       holeByHole,

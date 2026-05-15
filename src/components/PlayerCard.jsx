@@ -13,6 +13,31 @@ const STATUS_BADGE_CLASSES = {
   DQ: "border-orange-300/60 bg-orange-500/15 text-orange-100",
 };
 
+const PLAY_STATE_BADGES = {
+  onCourse: {
+    label: "On course now",
+    className: "border-emerald-300/60 bg-emerald-300/15 text-emerald-100",
+  },
+  finishedToday: {
+    label: "Finished today",
+    className: "border-sky-300/50 bg-sky-300/12 text-sky-100",
+  },
+  notStartedToday: {
+    label: "Not teed off today",
+    className: "border-white/15 bg-white/[0.06] text-white/60",
+  },
+};
+
+function getRoundStatusLabel(golfer, scoringStarted) {
+  if (!scoringStarted) return `Round ${golfer.scheduledRound || 1} tee time`;
+  if (golfer.isMissing) return "Not matched to live scoring";
+  if (OUT_STATUS_LABELS[golfer.status]) return OUT_STATUS_LABELS[golfer.status];
+  if (golfer.playState === "onCourse") return golfer.status || "On course now";
+  if (golfer.playState === "finishedToday") return `Finished Round ${golfer.currentRoundNum || golfer.scheduledRound || ""}`.trim();
+  if (golfer.playState === "notStartedToday") return `Tee time ${golfer.teeTime || "TBA"}`;
+  return golfer.status || "Not started";
+}
+
 export function PlayerCard({ golfer, expanded, onToggle, scoringStarted }) {
   const outStatus = OUT_STATUS_LABELS[golfer.status] ? golfer.status : null;
   const problemStatus = golfer.isMissing || outStatus;
@@ -21,9 +46,9 @@ export function PlayerCard({ golfer, expanded, onToggle, scoringStarted }) {
     ? scoringStarted
       ? "Not matched to live scoring — team total may be incomplete."
       : "Not matched to live scoring"
-    : scoringStarted
-      ? OUT_STATUS_LABELS[golfer.status] || golfer.status || "Not started"
-      : `Round ${golfer.scheduledRound || 1} tee time`;
+    : getRoundStatusLabel(golfer, scoringStarted);
+  const playBadge = scoringStarted && !problemStatus ? PLAY_STATE_BADGES[golfer.playState] : null;
+  const showToday = scoringStarted && ["onCourse", "finishedToday"].includes(golfer.playState) && golfer.todayScore !== "-";
 
   return (
     <div className={`rounded-md border transition ${golfer.isCounting ? "border-amber-300/50 bg-emerald-950/70 shadow-[inset_3px_0_0_rgba(252,211,77,.85)]" : "border-slate-300/10 bg-[#0a1714]"} ${scoringStarted && !golfer.isCounting ? "opacity-[.85]" : ""} ${problemStatus ? "border-orange-300/60" : ""}`}>
@@ -41,12 +66,17 @@ export function PlayerCard({ golfer, expanded, onToggle, scoringStarted }) {
                 Review
               </span>
             )}
+            {playBadge && (
+              <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] ${playBadge.className}`}>
+                {playBadge.label}
+              </span>
+            )}
             {problemStatus && <CircleAlert size={16} className="text-orange-200" />}
           </div>
           <div className="mt-0.5 flex flex-wrap gap-x-2 gap-y-1 text-[11px] font-bold uppercase tracking-[0.12em] text-white/55">
             <span>{roleLabel}</span>
             <span>{statusLabel}</span>
-            {scoringStarted && <span>Today {golfer.todayScore}</span>}
+            {showToday && <span>Today {golfer.todayScore}</span>}
           </div>
         </div>
         <div className="flex items-center justify-between gap-3 sm:justify-end">
