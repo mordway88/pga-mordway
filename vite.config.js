@@ -5,6 +5,8 @@ import { tournamentConfig } from "./src/config/tournamentConfig.js";
 import { buildEntriesPayload, getEntrySheetUrl } from "./src/lib/entryParsing.js";
 import { buildScoresPayload } from "./src/lib/scoreApi.js";
 
+import { cloudflare } from "@cloudflare/vite-plugin";
+
 function json(response, payload, statusCode = 200) {
   response.statusCode = statusCode;
   response.setHeader("Content-Type", "application/json");
@@ -37,10 +39,5 @@ function devApi() {
 }
 
 export default defineConfig({
-  plugins: [
-    devApi(),
-    react(),
-    tailwindcss(),
-  ],
+  plugins: [devApi(), react(), tailwindcss(), cloudflare()],
 });
-
