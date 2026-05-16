@@ -164,7 +164,7 @@ export default function App() {
       currentTimeMs &&
       currentTimeMs - new Date(lastSuccessfulScoreFetchAt).getTime() > STALE_SCORE_MS
   );
-  const headerStatus = testDataMode ? "TEST DATA" : scoreError && !lastSuccessfulScoreFetchAt ? "ERROR" : staleScores ? "STALE" : tournamentFinished ? "FINAL" : scoringStarted ? "LIVE" : "TEE TIMES";
+  const headerStatus = testDataMode ? "TEST DATA" : scoreError && !lastSuccessfulScoreFetchAt ? "ERROR" : staleScores ? "UPDATE DELAYED" : tournamentFinished ? "FINAL" : scoringStarted ? "LIVE" : "TEE TIMES";
   const nextRefreshSeconds = Math.max(0, Math.ceil((nextScoreRefreshAt - currentTimeMs) / 1000));
   const leaderboard = useMemo(() => calculateLeaderboard(entries, golfers, { scoringStarted }), [entries, golfers, scoringStarted]);
 
@@ -197,7 +197,7 @@ export default function App() {
             <div className="rounded-lg border border-white/10 bg-white/[0.055] p-2 text-[11px] font-bold uppercase tracking-[0.12em] text-white/60 lg:min-w-80">
               <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                 <span className="text-amber-100">{tournamentConfig.displayName}</span>
-                <span className={headerStatus === "LIVE" ? "text-emerald-200" : headerStatus === "STALE" ? "text-amber-200" : "text-white/60"}>{headerStatus}</span>
+                <span className={headerStatus === "LIVE" ? "text-emerald-200" : headerStatus === "UPDATE DELAYED" ? "text-amber-200" : "text-white/60"}>{headerStatus}</span>
               </div>
               <div className="mt-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                 <span className="inline-flex items-center gap-2">
@@ -209,7 +209,7 @@ export default function App() {
               <div className="mt-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                 <span className="inline-flex items-center gap-2">
                   <RadioTower size={14} />
-                  {scoreMeta?.source || "Score source"}
+                  Scores refresh automatically
                 </span>
                 <button
                   type="button"
@@ -257,7 +257,7 @@ export default function App() {
       </motion.main>
 
       <footer className="border-t border-white/10 px-4 py-6 text-center text-[10px] font-bold uppercase tracking-[0.16em] text-white/35">
-        {tournamentConfig.appTitle} · Build {BUILD_LABEL} · Scores {scoreMeta?.source || "loading"} · Entries {entryMeta?.source || "loading"}
+        {tournamentConfig.appTitle} · Build {BUILD_LABEL} · Updated {lastUpdated || "loading"} · {entries.length || entryMeta?.entries?.length || 0} teams
       </footer>
     </div>
   );

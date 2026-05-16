@@ -5,6 +5,12 @@ function formatIso(value) {
   return new Date(value).toLocaleString("en-US", { timeZone: tournamentConfig.timezone });
 }
 
+function formatInternalSource(source) {
+  if (!source) return "n/a";
+  if (source === "ESPN") return "Live scoring feed";
+  return source;
+}
+
 export function DebugPanel({ leaderboard, golfers, entries, scoreMeta, entryMeta, lastEntryFetchAt, lastSuccessfulScoreFetchAt }) {
   const teamsWithIssues = leaderboard.filter((entry) => entry.reviewNeeded);
 
@@ -20,11 +26,11 @@ export function DebugPanel({ leaderboard, golfers, entries, scoreMeta, entryMeta
           <div>Event: {scoreMeta?.eventName || tournamentConfig.displayName}</div>
           <div>Golfers loaded: {golfers.length}</div>
           <div>Entries loaded: {entries.length}</div>
-          <div>ESPN event id: {scoreMeta?.selectedEventId || "n/a"}</div>
+          <div>Score event id: {scoreMeta?.selectedEventId || "n/a"}</div>
           <div>Score fetch: {formatIso(lastSuccessfulScoreFetchAt)}</div>
           <div>Entry fetch: {formatIso(lastEntryFetchAt || entryMeta?.fetchedAt)}</div>
           <div>Entry source: {entryMeta?.source || "n/a"}</div>
-          <div>Score source: {scoreMeta?.source || "n/a"}</div>
+          <div>Score feed: {formatInternalSource(scoreMeta?.source)}</div>
         </div>
 
         <div className="mt-4">
@@ -48,4 +54,3 @@ export function DebugPanel({ leaderboard, golfers, entries, scoreMeta, entryMeta
     </section>
   );
 }
-
