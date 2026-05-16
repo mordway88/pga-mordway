@@ -1,20 +1,10 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { tournamentConfig } from "../config/tournamentConfig";
 import { getScoreTone } from "../lib/scoreTone";
 import { TeamRoster } from "./TeamRoster";
 
-function formatUnmatchedMessage(count) {
-  if (!count) return null;
-  return count === 1 ? "1 golfer not matched to live scoring" : `${count} golfers not matched to live scoring`;
-}
-
 function getPrizeStatus(entry) {
-  if (!entry?.rank) return null;
-  const prize = tournamentConfig.prizes?.[entry.rank - 1];
-  if (!prize) return null;
-  const tied = String(entry.rankLabel || "").startsWith("T");
-  return tied ? `${entry.rankLabel} · payout TBD` : `${prize.placeLabel} · ${prize.prize}`;
+  return entry?.projectedPayout?.shortLabel || null;
 }
 
 export function TeamRow({ entry, expanded, onToggle, scoringStarted }) {
@@ -27,7 +17,6 @@ export function TeamRow({ entry, expanded, onToggle, scoringStarted }) {
   const detailText = scoringStarted && hasTeamActivity
     ? activityText
     : `Earliest team tee time: ${entry.nextTeeTime}`;
-  const unmatchedMessage = entry.validationIssues?.[0] || formatUnmatchedMessage(entry.unmatchedPlayers.length);
   const prizeStatus = scoringStarted ? getPrizeStatus(entry) : null;
 
   return (
@@ -48,8 +37,8 @@ export function TeamRow({ entry, expanded, onToggle, scoringStarted }) {
         }`}
       >
         {scoringStarted && (
-          <div className="grid h-10 w-10 place-items-center rounded-md bg-amber-300 font-condensed text-xl font-black text-emerald-950">
-            {entry.rank}
+          <div className="grid h-10 min-w-10 place-items-center rounded-md bg-amber-300 px-2 font-condensed text-xl font-black text-emerald-950">
+            {entry.rankLabel || entry.rank}
           </div>
         )}
         <div>
@@ -60,14 +49,9 @@ export function TeamRow({ entry, expanded, onToggle, scoringStarted }) {
                 {prizeStatus}
               </span>
             )}
-            {entry.reviewNeeded && (
-              <span className="rounded-full border border-orange-300/50 bg-orange-300/15 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-orange-100">
-                Review needed
-              </span>
-            )}
           </div>
           <div className="mt-0.5 text-[11px] font-bold uppercase tracking-[0.14em] text-white/48">
-            {scoringStarted && unmatchedMessage ? unmatchedMessage : detailText}
+            {detailText}
           </div>
         </div>
         {scoringStarted && (

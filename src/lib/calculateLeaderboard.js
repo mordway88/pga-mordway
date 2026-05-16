@@ -1,5 +1,7 @@
 import { COUNTING_PLAYERS } from "./constants.js";
 import { formatScore } from "./formatScore.js";
+import { tournamentConfig } from "../config/tournamentConfig.js";
+import { applyProjectedPayouts } from "./prizePayouts.js";
 import { normalizeName } from "./normalizeName.js";
 import { getCurrentRoundForSchedule, getStaticTeeTime } from "./teeTimes.js";
 
@@ -154,6 +156,10 @@ export function calculateLeaderboard(entries, golfers, options = {}) {
     const tied = scoringStarted && calculatedEntries.some((team) => team.id !== entry.id && team.totalScore === entry.totalScore);
     entry.rankLabel = tied ? `T${entry.rank}` : String(entry.rank);
   });
+
+  if (scoringStarted) {
+    applyProjectedPayouts(calculatedEntries, tournamentConfig.prizes);
+  }
 
   return calculatedEntries;
 }

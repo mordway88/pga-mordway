@@ -73,7 +73,7 @@ export function PlayerCard({ golfer, expanded, onToggle, scoringStarted }) {
             )}
             {golfer.isMissing && (
               <span className="rounded-full border border-orange-300/60 bg-orange-400/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] text-orange-100">
-                Review
+                No score
               </span>
             )}
             {playBadge && (

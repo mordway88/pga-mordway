@@ -43,15 +43,12 @@ export function TeamRoster({ entry, scoringStarted }) {
           <div><span className="block text-white/35">On course</span>{entry.onCourseCount}</div>
           <div><span className="block text-white/35">Finished</span>{entry.finishedCount}</div>
           <div><span className="block text-white/35">Not started</span>{notStartedCount}</div>
-        </div>
-      )}
-
-      {entry.reviewNeeded && (
-        <div className="mb-3 rounded-lg border border-orange-300/30 bg-orange-300/10 p-3 text-sm font-semibold text-orange-100">
-          <div className="font-bold uppercase tracking-[0.12em]">Review needed</div>
-          <ul className="mt-1 list-disc pl-5">
-            {entry.validationIssues.map((issue) => <li key={issue}>{issue}</li>)}
-          </ul>
+          {entry.projectedPayout && (
+            <div className="sm:col-span-5">
+              <span className="block text-white/35">Projected payout</span>
+              <span className="font-condensed text-lg text-amber-100">{entry.projectedPayout.detailLabel}</span>
+            </div>
+          )}
         </div>
       )}
 
