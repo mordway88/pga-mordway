@@ -93,7 +93,7 @@ export function TournamentLeaderboard({ golfers, entries, scoringStarted }) {
 
           return (
             <motion.div key={golfer.normalizedName} layout className="border-b border-white/10 last:border-b-0">
-              <button type="button" onClick={() => setExpandedGolfer(expanded ? null : golfer.normalizedName)} className="grid w-full grid-cols-[auto_1fr_auto_auto] items-center gap-3 p-3 text-left sm:p-4">
+              <button type="button" aria-expanded={expanded} onClick={() => setExpandedGolfer(expanded ? null : golfer.normalizedName)} className="grid w-full grid-cols-[auto_1fr_auto_auto] items-center gap-3 p-3 text-left sm:p-4">
                 <div className="w-9 text-center font-condensed text-xl font-bold text-white/50">{getTournamentRank(filteredGolfers, index)}</div>
                 <div>
                   <div className="flex flex-wrap items-center gap-2 font-condensed text-xl font-bold uppercase tracking-[0.04em] text-white">

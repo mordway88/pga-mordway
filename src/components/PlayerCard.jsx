@@ -28,6 +28,11 @@ const PLAY_STATE_BADGES = {
   },
 };
 
+const ROLE_CLASSES = {
+  Counting: "border-amber-300/45 bg-amber-300/12 text-amber-100",
+  Dropped: "border-white/15 bg-white/[0.06] text-white/55",
+};
+
 function getRoundStatusLabel(golfer, scoringStarted) {
   if (!scoringStarted) return `Round ${golfer.scheduledRound || 1} tee time`;
   if (golfer.isMissing) return "Not matched to live scoring";
@@ -40,7 +45,7 @@ function getRoundStatusLabel(golfer, scoringStarted) {
 
 export function PlayerCard({ golfer, expanded, onToggle, scoringStarted }) {
   const outStatus = OUT_STATUS_LABELS[golfer.status] ? golfer.status : null;
-  const problemStatus = golfer.isMissing || outStatus;
+  const problemStatus = golfer.isMissing || golfer.isDuplicate || outStatus;
   const roleLabel = scoringStarted ? (golfer.isCounting ? "Counting" : "Dropped") : `Group ${golfer.groupNumber}`;
   const statusLabel = golfer.isMissing
     ? scoringStarted
@@ -51,11 +56,16 @@ export function PlayerCard({ golfer, expanded, onToggle, scoringStarted }) {
   const showToday = scoringStarted && ["onCourse", "finishedToday"].includes(golfer.playState) && golfer.todayScore !== "-";
 
   return (
-    <div className={`rounded-md border transition ${golfer.isCounting ? "border-amber-300/50 bg-emerald-950/70 shadow-[inset_3px_0_0_rgba(252,211,77,.85)]" : "border-slate-300/10 bg-[#0a1714]"} ${scoringStarted && !golfer.isCounting ? "opacity-[.85]" : ""} ${problemStatus ? "border-orange-300/60" : ""}`}>
-      <button type="button" onClick={onToggle} className="grid w-full grid-cols-1 items-center gap-1.5 p-3 text-left sm:grid-cols-[1fr_auto]">
+    <div className={`rounded-md border transition ${golfer.isCounting ? "border-amber-300/50 bg-emerald-950/70 shadow-[inset_3px_0_0_rgba(252,211,77,.85)]" : "border-slate-300/10 bg-[#0a1714]"} ${scoringStarted && !golfer.isCounting ? "opacity-[.88]" : ""} ${problemStatus ? "border-orange-300/60" : ""}`}>
+      <button type="button" onClick={onToggle} aria-expanded={expanded} className="grid w-full grid-cols-1 items-center gap-2 p-3 text-left sm:grid-cols-[1fr_auto]">
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-condensed text-base font-bold uppercase tracking-[0.04em] text-white sm:text-lg">{golfer.name}</span>
+            {scoringStarted && (
+              <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] ${ROLE_CLASSES[roleLabel] || ROLE_CLASSES.Dropped}`}>
+                {roleLabel}
+              </span>
+            )}
             {outStatus && (
               <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] ${STATUS_BADGE_CLASSES[outStatus]}`}>
                 {outStatus}
@@ -74,7 +84,7 @@ export function PlayerCard({ golfer, expanded, onToggle, scoringStarted }) {
             {problemStatus && <CircleAlert size={16} className="text-orange-200" />}
           </div>
           <div className="mt-0.5 flex flex-wrap gap-x-2 gap-y-1 text-[11px] font-bold uppercase tracking-[0.12em] text-white/55">
-            <span>{roleLabel}</span>
+            {!scoringStarted && <span>{roleLabel}</span>}
             <span>{statusLabel}</span>
             {showToday && <span>Today {golfer.todayScore}</span>}
           </div>

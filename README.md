@@ -1,6 +1,6 @@
-# PGA Championship Fantasy Leaderboard
+# Major Fantasy Leaderboard
 
-React/Vite fantasy golf leaderboard for the PGA Championship pool.
+React/Vite fantasy golf leaderboard for major championship pools.
 
 ## Local Development
 
@@ -15,10 +15,11 @@ npm run dev
 npm run build
 ```
 
-Cloudflare Pages should build with:
+Current production deploy uses Cloudflare Workers with static assets:
 
-- Build command: `npm run build`
-- Build output: `dist`
-- Functions directory: `functions`
+```bash
+npx wrangler deploy worker.js --name pga-mordway --assets dist --domain pga.mordway.com --compatibility-date 2026-05-13 --compatibility-flag nodejs_compat
+```
 
-The live pool entries are read from the connected Google Sheet through the Pages Function at `/api/entries`.
+Tournament setup lives in `src/config/tournamentConfig.js`.
+

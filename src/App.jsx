@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { AlertTriangle, Loader2, RadioTower } from "lucide-react";
+import { AlertTriangle, Loader2, RadioTower, RefreshCw } from "lucide-react";
 import { NavTabs } from "./components/NavTabs";
 import { PoolLeaderboard } from "./components/PoolLeaderboard";
 import { TournamentLeaderboard } from "./components/TournamentLeaderboard";
 import { WanamakerTrophy } from "./components/WanamakerTrophy";
+import { DebugPanel } from "./components/DebugPanel";
+import { tournamentConfig } from "./config/tournamentConfig";
 import { calculateLeaderboard } from "./lib/calculateLeaderboard";
 import { fetchEspnGolfData } from "./lib/fetchEspnGolfData";
 import { fetchPoolEntries } from "./lib/fetchPoolEntries";
@@ -13,31 +15,57 @@ import { hasTournamentStarted } from "./lib/teeTimes";
 
 const ENABLE_MOCK_SCORING = import.meta.env.VITE_ENABLE_MOCK_SCORING === "true";
 const STALE_SCORE_MS = 2 * 60 * 1000;
+const SCORE_STORAGE_KEY = `${tournamentConfig.id}:lastGoodScores`;
+const ENTRY_STORAGE_KEY = `${tournamentConfig.id}:lastGoodEntries`;
+const BUILD_LABEL = import.meta.env.VITE_APP_VERSION || new Date().toISOString().slice(0, 10);
 
 function formatLastUpdated(date = new Date()) {
   return new Intl.DateTimeFormat("en-US", {
     hour: "numeric",
     minute: "2-digit",
-    timeZone: "America/Los_Angeles",
+    timeZone: tournamentConfig.timezone,
     timeZoneName: "short",
   }).format(date);
 }
 
+function readStoredPayload(key) {
+  try {
+    const raw = window.localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredPayload(key, payload) {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(payload));
+  } catch {
+    // Storage is a convenience fallback only; never block live scoring on it.
+  }
+}
+
 export default function App() {
+  const storedScores = typeof window !== "undefined" ? readStoredPayload(SCORE_STORAGE_KEY) : null;
+  const storedEntries = typeof window !== "undefined" ? readStoredPayload(ENTRY_STORAGE_KEY) : null;
   const [activeView, setActiveView] = useState("pool");
-  const [golfers, setGolfers] = useState([]);
-  const [entries, setEntries] = useState([]);
-  const [entryMeta, setEntryMeta] = useState(null);
-  const [scoresLoading, setScoresLoading] = useState(true);
-  const [entriesLoading, setEntriesLoading] = useState(true);
+  const [golfers, setGolfers] = useState(storedScores?.golfers || []);
+  const [entries, setEntries] = useState(storedEntries?.entries || []);
+  const [entryMeta, setEntryMeta] = useState(storedEntries || null);
+  const [scoreMeta, setScoreMeta] = useState(storedScores || null);
+  const [scoresLoading, setScoresLoading] = useState(!storedScores?.golfers?.length);
+  const [entriesLoading, setEntriesLoading] = useState(!storedEntries?.entries?.length);
   const [scoreError, setScoreError] = useState(null);
   const [entryError, setEntryError] = useState(null);
-  const [lastUpdated, setLastUpdated] = useState("");
-  const [lastSuccessfulScoreFetchAt, setLastSuccessfulScoreFetchAt] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(storedScores?.fetchedAt ? formatLastUpdated(new Date(storedScores.fetchedAt)) : "");
+  const [lastSuccessfulScoreFetchAt, setLastSuccessfulScoreFetchAt] = useState(storedScores?.fetchedAt || null);
+  const [lastEntryFetchAt, setLastEntryFetchAt] = useState(storedEntries?.fetchedAt || null);
   const [currentTimeMs, setCurrentTimeMs] = useState(() => new Date().getTime());
   const [testDataMode, setTestDataMode] = useState(false);
-  const lastSuccessfulScoreFetchAtRef = useRef(null);
-  const entriesCountRef = useRef(0);
+  const [nextScoreRefreshAt, setNextScoreRefreshAt] = useState(() => new Date().getTime() + tournamentConfig.scoreRefreshMs);
+  const debugMode = new URLSearchParams(window.location.search).get("debug") === "1";
+  const lastSuccessfulScoreFetchAtRef = useRef(storedScores?.fetchedAt || null);
+  const entriesCountRef = useRef(storedEntries?.entries?.length || 0);
 
   const loadGolfData = useCallback(async ({ silent = false } = {}) => {
     await Promise.resolve();
@@ -47,10 +75,13 @@ export default function App() {
     try {
       const result = await fetchEspnGolfData();
       setGolfers(result.golfers);
+      setScoreMeta(result);
       setTestDataMode(false);
       setLastSuccessfulScoreFetchAt(result.fetchedAt);
       lastSuccessfulScoreFetchAtRef.current = result.fetchedAt;
       setLastUpdated(formatLastUpdated(new Date(result.fetchedAt)));
+      setNextScoreRefreshAt(new Date().getTime() + tournamentConfig.scoreRefreshMs);
+      writeStoredPayload(SCORE_STORAGE_KEY, result);
     } catch (fetchError) {
       console.error(fetchError);
 
@@ -62,6 +93,7 @@ export default function App() {
         setLastSuccessfulScoreFetchAt(fetchedAt);
         lastSuccessfulScoreFetchAtRef.current = fetchedAt;
         setLastUpdated(formatLastUpdated());
+        setScoreMeta({ eventName: tournamentConfig.displayName, source: "Simulation", fetchedAt, golfers: generateMockGolfers() });
       } else {
         const lastGoodFetch = lastSuccessfulScoreFetchAtRef.current;
         setScoreError(
@@ -85,6 +117,8 @@ export default function App() {
       setEntries(result.entries || []);
       entriesCountRef.current = result.entries?.length || 0;
       setEntryMeta(result);
+      setLastEntryFetchAt(result.fetchedAt);
+      writeStoredPayload(ENTRY_STORAGE_KEY, result);
       setEntryError(null);
     } catch (fetchError) {
       console.error(fetchError);
@@ -101,9 +135,9 @@ export default function App() {
       loadGolfData();
       loadEntries();
     }, 0);
-    const scoreIntervalId = window.setInterval(() => loadGolfData({ silent: true }), 60000);
+    const scoreIntervalId = window.setInterval(() => loadGolfData({ silent: true }), tournamentConfig.scoreRefreshMs);
     const entryIntervalId = window.setInterval(() => loadEntries({ silent: true }), 60000);
-    const clockIntervalId = window.setInterval(() => setCurrentTimeMs(new Date().getTime()), 30000);
+    const clockIntervalId = window.setInterval(() => setCurrentTimeMs(new Date().getTime()), 1000);
 
     return () => {
       window.clearTimeout(initialLoadId);
@@ -131,13 +165,7 @@ export default function App() {
       currentTimeMs - new Date(lastSuccessfulScoreFetchAt).getTime() > STALE_SCORE_MS
   );
   const headerStatus = testDataMode ? "TEST DATA" : scoreError && !lastSuccessfulScoreFetchAt ? "ERROR" : staleScores ? "STALE" : tournamentFinished ? "FINAL" : scoringStarted ? "LIVE" : "TEE TIMES";
-  const headerStatusText = testDataMode
-    ? "TEST DATA · Not live scores"
-    : headerStatus === "ERROR"
-      ? "ERROR · Retrying"
-      : headerStatus === "STALE"
-        ? `STALE · Last update ${lastUpdated || "unknown"}`
-        : `${headerStatus} · Updated ${lastUpdated || "Loading"}`;
+  const nextRefreshSeconds = Math.max(0, Math.ceil((nextScoreRefreshAt - currentTimeMs) / 1000));
   const leaderboard = useMemo(() => calculateLeaderboard(entries, golfers, { scoringStarted }), [entries, golfers, scoringStarted]);
 
   const view = {
@@ -158,23 +186,40 @@ export default function App() {
       <header className="sticky top-0 z-40 overflow-hidden border-b border-amber-200/10 bg-[#04110d]/94 shadow-[0_18px_60px_rgba(0,0,0,.45)] backdrop-blur-xl">
         <div className="broadcast-bar h-1" />
         <WanamakerTrophy />
-        <div className="relative z-10 mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 lg:px-8">
+        <div className="relative z-10 mx-auto flex max-w-7xl flex-col gap-2 px-4 py-2.5 sm:px-6 lg:px-8">
           <div className="flex flex-col justify-between gap-2 lg:flex-row lg:items-end">
             <div>
-              <p className="font-serif text-[11px] font-bold uppercase tracking-[0.22em] text-amber-200">PGA Championship</p>
-              <h1 className="mt-1 font-condensed text-3xl font-black uppercase leading-none text-white drop-shadow-[0_2px_18px_rgba(255,255,255,.08)] sm:text-5xl">
-                Fantasy Leaderboard
+              <p className="font-serif text-[10px] font-bold uppercase tracking-[0.22em] text-amber-200">{tournamentConfig.productLabel}</p>
+              <h1 className="mt-0.5 font-condensed text-3xl font-black uppercase leading-none text-white drop-shadow-[0_2px_18px_rgba(255,255,255,.08)] sm:text-5xl">
+                {tournamentConfig.appTitle}
               </h1>
             </div>
-            <div className="grid gap-1 text-[11px] font-bold uppercase tracking-[0.14em] text-white/55 lg:text-right">
-              <span className="inline-flex items-center gap-2 lg:justify-end">
+            <div className="rounded-lg border border-white/10 bg-white/[0.055] p-2 text-[11px] font-bold uppercase tracking-[0.12em] text-white/60 lg:min-w-80">
+              <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                <span className="text-amber-100">{tournamentConfig.displayName}</span>
+                <span className={headerStatus === "LIVE" ? "text-emerald-200" : headerStatus === "STALE" ? "text-amber-200" : "text-white/60"}>{headerStatus}</span>
+              </div>
+              <div className="mt-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                <span className="inline-flex items-center gap-2">
                 {scoresLoading && !lastUpdated && <Loader2 size={14} className="animate-spin text-amber-200" />}
-                {headerStatusText}
-              </span>
-              <span className="inline-flex items-center gap-2 lg:justify-end">
-                <RadioTower size={14} />
-                Scores refresh automatically
-              </span>
+                  {lastUpdated ? `Updated ${lastUpdated}` : "Loading scores"}
+                </span>
+                <span>{entries.length} teams</span>
+              </div>
+              <div className="mt-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                <span className="inline-flex items-center gap-2">
+                  <RadioTower size={14} />
+                  {scoreMeta?.source || "Score source"}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => loadGolfData()}
+                  className="inline-flex items-center gap-1 rounded-md border border-amber-200/20 bg-amber-200/10 px-2 py-1 text-amber-100 transition hover:bg-amber-200/18"
+                >
+                  <RefreshCw size={13} className={scoresLoading ? "animate-spin" : ""} />
+                  Refresh · {nextRefreshSeconds}s
+                </button>
+              </div>
             </div>
           </div>
           <NavTabs activeView={activeView} onChange={setActiveView} />
@@ -198,10 +243,21 @@ export default function App() {
         className="min-h-[70vh]"
       >
         {view}
+        {debugMode && (
+          <DebugPanel
+            leaderboard={leaderboard}
+            golfers={golfers}
+            entries={entries}
+            scoreMeta={scoreMeta}
+            entryMeta={entryMeta}
+            lastEntryFetchAt={lastEntryFetchAt}
+            lastSuccessfulScoreFetchAt={lastSuccessfulScoreFetchAt}
+          />
+        )}
       </motion.main>
 
-      <footer className="border-t border-white/10 px-4 py-8 text-center text-xs font-bold uppercase tracking-[0.16em] text-white/35">
-        PGA Championship Fantasy Leaderboard
+      <footer className="border-t border-white/10 px-4 py-6 text-center text-[10px] font-bold uppercase tracking-[0.16em] text-white/35">
+        {tournamentConfig.appTitle} · Build {BUILD_LABEL} · Scores {scoreMeta?.source || "loading"} · Entries {entryMeta?.source || "loading"}
       </footer>
     </div>
   );

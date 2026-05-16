@@ -1,9 +1,9 @@
-import { MANUAL_SCORE_OVERRIDES, MANUAL_STATUS_OVERRIDES } from "../data/manualOverrides";
-import { formatScore } from "./formatScore";
-import { normalizeName } from "./normalizeName";
-import { parseGolfScore } from "./parseGolfScore";
-import { extractTeeTime } from "./extractTeeTime";
-import { getCurrentRoundForSchedule, getStaticTeeTime } from "./teeTimes";
+import { MANUAL_SCORE_OVERRIDES, MANUAL_STATUS_OVERRIDES } from "../data/manualOverrides.js";
+import { formatScore } from "./formatScore.js";
+import { normalizeName } from "./normalizeName.js";
+import { parseGolfScore } from "./parseGolfScore.js";
+import { extractTeeTime } from "./extractTeeTime.js";
+import { getCurrentRoundForSchedule, getStaticTeeTime } from "./teeTimes.js";
 
 function pickFirst(...values) {
   return values.find((value) => value !== undefined && value !== null && value !== "");

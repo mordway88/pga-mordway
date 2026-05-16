@@ -20,12 +20,12 @@ function getHoleResult(score, par) {
 
 function getEmptyScorecardMessage(golfer, activeRound) {
   if (golfer.playState === "notStartedToday" && activeRound === golfer.currentRoundNum) {
-    return `Round ${activeRound} scorecard appears after tee off. Tee time: ${golfer.teeTime || "TBA"}.`;
+    return `Round ${activeRound} starts at ${golfer.teeTime || "TBA"}.`;
   }
-  if (!golfer.hasStarted) return `Scorecard appears after tee off. Tee time: ${golfer.teeTime || "TBA"}.`;
+  if (!golfer.hasStarted) return `Starts ${golfer.teeTime || "TBA"}.`;
   if (activeRound > (golfer.currentRoundNum || 1)) return `Round ${activeRound} has not started.`;
-  if (golfer.status === "F" || golfer.roundScores?.[activeRound - 1] !== "-") return "Hole-by-hole data is unavailable for this round.";
-  return "Hole-by-hole scorecard is not available yet. Showing total score and status only.";
+  if (golfer.status === "F" || golfer.roundScores?.[activeRound - 1] !== "-") return "Hole details unavailable for this round.";
+  return "Hole details are not available yet.";
 }
 
 function MobileNineCard({ title, holes, startIndex }) {
@@ -92,8 +92,8 @@ export function GolferScorecard({ golfer, selectedRound, onRoundChange, compact 
                 activeRound === round ? "bg-amber-300 text-emerald-950" : "bg-white/10 text-white/70 hover:bg-white/15"
               }`}
             >
-              <span className="hidden sm:inline">R{round}</span>
-              <span className="sm:hidden">Round {round}</span>
+              <span className="sm:hidden">R{round}</span>
+              <span className="hidden sm:inline">Round {round}</span>
             </button>
           ))}
         </div>
@@ -158,6 +158,19 @@ export function GolferScorecard({ golfer, selectedRound, onRoundChange, compact 
           </table>
         </div>
         </>
+      )}
+      {hasHoleData && (
+        <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-bold uppercase tracking-[0.12em] text-white/55">
+          {[
+            ["Eagle+", "bg-yellow-200 text-yellow-900 border-yellow-300"],
+            ["Birdie", "bg-emerald-100 text-emerald-800 border-emerald-300"],
+            ["Par", "bg-white text-slate-700 border-slate-200"],
+            ["Bogey", "bg-red-100 text-red-800 border-red-300"],
+            ["Double+", "bg-blue-100 text-blue-800 border-blue-300"],
+          ].map(([label, className]) => (
+            <span key={label} className={`rounded border px-2 py-1 ${className}`}>{label}</span>
+          ))}
+        </div>
       )}
     </div>
   );

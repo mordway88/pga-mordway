@@ -48,7 +48,7 @@ jobs:
         run: |
           set -euo pipefail
           curl -fsSI https://pga.mordway.com | head -n 1
-          curl -fsS https://pga.mordway.com | grep -q '<title>PGA Championship Fantasy Leaderboard'
+          curl -fsS https://pga.mordway.com | grep -q '<title>Major Fantasy Leaderboard'
           curl -fsS https://pga.mordway.com | grep -vq 'Simulation'
           curl -fsS https://pga.mordway.com/api/entries > /tmp/entries.json
           node -e "const fs = require('fs'); const data = JSON.parse(fs.readFileSync('/tmp/entries.json','utf8')); if (!Array.isArray(data.entries) || data.entries.length < 1) throw new Error('No entries returned'); console.log(`${data.entries.length} entries verified`);"

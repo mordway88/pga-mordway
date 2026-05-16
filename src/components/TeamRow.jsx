@@ -18,7 +18,7 @@ export function TeamRow({ entry, expanded, onToggle, scoringStarted }) {
   const detailText = scoringStarted && hasTeamActivity
     ? activityText
     : `Earliest team tee time: ${entry.nextTeeTime}`;
-  const unmatchedMessage = formatUnmatchedMessage(entry.unmatchedPlayers.length);
+  const unmatchedMessage = entry.validationIssues?.[0] || formatUnmatchedMessage(entry.unmatchedPlayers.length);
 
   return (
     <motion.div
@@ -32,8 +32,9 @@ export function TeamRow({ entry, expanded, onToggle, scoringStarted }) {
       <button
         type="button"
         onClick={onToggle}
+        aria-expanded={expanded}
         className={`grid w-full items-center gap-3 p-3 text-left sm:p-4 ${
-          scoringStarted ? "grid-cols-[auto_1fr_auto_auto]" : "grid-cols-[1fr_auto]"
+          scoringStarted ? "grid-cols-[auto_1fr_auto] sm:grid-cols-[auto_1fr_auto_auto]" : "grid-cols-[1fr_auto]"
         }`}
       >
         {scoringStarted && (
@@ -55,13 +56,17 @@ export function TeamRow({ entry, expanded, onToggle, scoringStarted }) {
           </div>
         </div>
         {scoringStarted && (
-          <div className={`text-right font-condensed text-2xl font-black sm:text-4xl ${getScoreTone(entry.totalScore)}`}>
+          <div className={`text-right font-condensed text-3xl font-black sm:text-4xl ${getScoreTone(entry.totalScore)}`}>
             {entry.displayTotal}
           </div>
         )}
-        <div className="flex items-center justify-end gap-2">
+        <div className="col-span-full flex items-center justify-between gap-2 border-t border-white/8 pt-2 sm:col-span-1 sm:border-0 sm:pt-0">
+          <div className="flex flex-wrap gap-1 sm:hidden">
+            <span className="rounded-full bg-white/10 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white/55">{entry.playersData.filter((player) => player.isCounting).length}/10 counting</span>
+            {entry.outCount > 0 && <span className="rounded-full bg-orange-300/15 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-orange-100">{entry.outCount} cut/WD/DQ</span>}
+          </div>
           <span className={`font-condensed text-xs font-bold uppercase tracking-[0.12em] ${expanded ? "text-amber-200" : "text-white/50 group-hover:text-white/75"}`}>
-            {expanded ? "Hide" : "View team"}
+            {expanded ? "Collapse team" : "View team"}
           </span>
           {expanded ? <ChevronUp size={22} className="text-amber-200" /> : <ChevronDown size={22} className="text-white/45 transition group-hover:text-white/75" />}
         </div>

@@ -1,5 +1,3 @@
-export const FIRST_TEE_ISO = "2026-05-14T03:45:00-07:00";
-
 const ROUND_ONE = [
   ["6:45 AM", ["Braden Shattuck", "Alex Fitzpatrick", "Ben Griffin"]],
   ["6:56 AM", ["Francisco Bide", "Harry Hall", "Ryan Gerard"]],

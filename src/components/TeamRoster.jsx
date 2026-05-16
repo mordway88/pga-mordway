@@ -7,6 +7,7 @@ export function TeamRoster({ entry, scoringStarted }) {
   const [expandedGolfer, setExpandedGolfer] = useState(null);
   const countingPlayers = entry.playersData.filter((golfer) => golfer.isCounting);
   const droppedPlayers = entry.playersData.filter((golfer) => !golfer.isCounting);
+  const notStartedCount = entry.playersData.filter((golfer) => golfer.playState === "notStartedToday").length;
 
   function renderGolfer(golfer) {
     const key = `${entry.id}-${golfer.groupNumber}-${golfer.normalizedName}-${golfer.name}`;
@@ -35,11 +36,22 @@ export function TeamRoster({ entry, scoringStarted }) {
         </div>
       </div>
 
+      {scoringStarted && (
+        <div className="mb-3 grid gap-2 rounded-lg border border-white/10 bg-white/[0.045] p-3 text-xs font-bold uppercase tracking-[0.12em] text-white/58 sm:grid-cols-5">
+          <div><span className="block text-white/35">Team total</span><span className="font-condensed text-xl text-white">{entry.displayTotal}</span></div>
+          <div><span className="block text-white/35">Counting</span>{countingPlayers.length}/10</div>
+          <div><span className="block text-white/35">On course</span>{entry.onCourseCount}</div>
+          <div><span className="block text-white/35">Finished</span>{entry.finishedCount}</div>
+          <div><span className="block text-white/35">Not started</span>{notStartedCount}</div>
+        </div>
+      )}
+
       {entry.reviewNeeded && (
         <div className="mb-3 rounded-lg border border-orange-300/30 bg-orange-300/10 p-3 text-sm font-semibold text-orange-100">
-          {entry.unmatchedPlayers.length === 1
-            ? "1 golfer is not matched to live scoring. Team total may be incomplete."
-            : `${entry.unmatchedPlayers.length} golfers are not matched to live scoring. Team total may be incomplete.`}
+          <div className="font-bold uppercase tracking-[0.12em]">Review needed</div>
+          <ul className="mt-1 list-disc pl-5">
+            {entry.validationIssues.map((issue) => <li key={issue}>{issue}</li>)}
+          </ul>
         </div>
       )}
 

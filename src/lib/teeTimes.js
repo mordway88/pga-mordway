@@ -1,5 +1,6 @@
-import { FIRST_TEE_ISO, TEE_TIMES } from "../data/teeTimes";
-import { normalizeName } from "./normalizeName";
+import { tournamentConfig } from "../config/tournamentConfig.js";
+import { TEE_TIMES } from "../data/teeTimes.js";
+import { normalizeName } from "./normalizeName.js";
 
 const teeTimeMap = new Map();
 
@@ -31,20 +32,18 @@ Object.entries(TEE_TIMES).forEach(([round, groups]) => {
 });
 
 export function hasTournamentStarted(now = new Date()) {
-  return now >= new Date(FIRST_TEE_ISO);
+  return now >= new Date(tournamentConfig.firstTeeIso);
 }
 
-export function getCurrentRoundForSchedule(now = new Date()) {
-  const pacific = new Intl.DateTimeFormat("en-US", {
+export function getCurrentRoundForSchedule(now = new Date(), config = tournamentConfig) {
+  const dateKey = new Intl.DateTimeFormat("en-CA", {
     day: "2-digit",
     month: "2-digit",
-    timeZone: "America/Los_Angeles",
+    year: "numeric",
+    timeZone: config.timezone,
   }).format(now);
-
-  if (pacific === "05/17") return 4;
-  if (pacific === "05/16") return 3;
-  if (pacific === "05/15") return 2;
-  return 1;
+  const roundEntry = Object.entries(config.roundDates || {}).find(([, roundDate]) => roundDate === dateKey);
+  return Number(roundEntry?.[0] || 1);
 }
 
 export function getStaticTeeTime(normalizedName, round = getCurrentRoundForSchedule(), options = {}) {

@@ -6,10 +6,26 @@ import { PrizeWatch } from "./PrizeWatch";
 export function PoolLeaderboard({ leaderboard, entryMeta, entriesLoading, entryError, scoringStarted }) {
   const [expandedTeamId, setExpandedTeamId] = useState(leaderboard[0]?.id || null);
   const [teamQuery, setTeamQuery] = useState("");
+  const [quickFilter, setQuickFilter] = useState("all");
   const normalizedQuery = teamQuery.trim().toLowerCase();
-  const filteredLeaderboard = normalizedQuery
-    ? leaderboard.filter((entry) => entry.name.toLowerCase().includes(normalizedQuery))
-    : leaderboard;
+  const quickFilters = [
+    { id: "all", label: "All" },
+    { id: "top10", label: "Top 10" },
+    { id: "review", label: "Review needed" },
+    { id: "active", label: "On course" },
+  ];
+  const filteredLeaderboard = leaderboard
+    .filter((entry, index) => {
+      if (quickFilter === "top10") return index < 10;
+      if (quickFilter === "review") return entry.reviewNeeded;
+      if (quickFilter === "active") return entry.onCourseCount > 0;
+      return true;
+    })
+    .filter((entry) => {
+      if (!normalizedQuery) return true;
+      const golferMatch = entry.playersData.some((golfer) => golfer.name.toLowerCase().includes(normalizedQuery));
+      return entry.name.toLowerCase().includes(normalizedQuery) || golferMatch;
+    });
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
@@ -50,7 +66,7 @@ export function PoolLeaderboard({ leaderboard, entryMeta, entriesLoading, entryE
 
       <div className="mb-3 rounded-lg border border-white/10 bg-white/[0.055] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,.05)] sm:p-3">
         <label htmlFor="team-search" className="mb-2 block text-[11px] font-bold uppercase tracking-[0.14em] text-white/55">
-          Find a team
+          Find a team or golfer
         </label>
         <div className="flex gap-2">
           <div className="relative flex-1">
@@ -59,8 +75,8 @@ export function PoolLeaderboard({ leaderboard, entryMeta, entriesLoading, entryE
               id="team-search"
               value={teamQuery}
               onChange={(event) => setTeamQuery(event.target.value)}
-              placeholder="Search by name"
-              aria-label="Search teams by name"
+              placeholder="Search team or golfer"
+              aria-label="Search teams or golfers by name"
               className="min-h-12 w-full rounded-lg border border-white/10 bg-[#081a15] py-2 pl-10 pr-3 text-base text-white outline-none placeholder:text-white/40 focus:border-amber-300/60"
             />
           </div>
@@ -74,6 +90,25 @@ export function PoolLeaderboard({ leaderboard, entryMeta, entriesLoading, entryE
               <span className="hidden sm:inline">Clear</span>
             </button>
           )}
+        </div>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap gap-1.5">
+            {quickFilters.map((filter) => (
+              <button
+                key={filter.id}
+                type="button"
+                onClick={() => setQuickFilter(filter.id)}
+                className={`rounded-md px-3 py-1.5 font-condensed text-xs font-bold uppercase tracking-[0.12em] ${
+                  quickFilter === filter.id ? "bg-amber-300 text-emerald-950" : "bg-white/10 text-white/65 hover:bg-white/15"
+                }`}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
+          <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/45">
+            Showing {filteredLeaderboard.length} of {leaderboard.length}
+          </div>
         </div>
       </div>
 
