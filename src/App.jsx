@@ -14,7 +14,7 @@ import { generateMockGolfers } from "./lib/generateMockGolfers";
 import { hasTournamentStarted } from "./lib/teeTimes";
 
 const ENABLE_MOCK_SCORING = import.meta.env.VITE_ENABLE_MOCK_SCORING === "true";
-const STALE_SCORE_MS = 2 * 60 * 1000;
+const SCORE_DELAY_WARNING_MS = 5 * 60 * 1000;
 const SCORE_STORAGE_KEY = `${tournamentConfig.id}:lastGoodScores`;
 const ENTRY_STORAGE_KEY = `${tournamentConfig.id}:lastGoodEntries`;
 const BUILD_LABEL = import.meta.env.VITE_APP_VERSION || new Date().toISOString().slice(0, 10);
@@ -158,13 +158,14 @@ export default function App() {
         golfers.every((golfer) => golfer.status === "F" || golfer.isOut),
     );
   }, [golfers, scoringStarted]);
-  const staleScores = Boolean(
+  const delayedScores = Boolean(
     scoringStarted &&
       lastSuccessfulScoreFetchAt &&
       currentTimeMs &&
-      currentTimeMs - new Date(lastSuccessfulScoreFetchAt).getTime() > STALE_SCORE_MS
+      currentTimeMs - new Date(lastSuccessfulScoreFetchAt).getTime() > SCORE_DELAY_WARNING_MS
   );
-  const headerStatus = testDataMode ? "TEST DATA" : scoreError && !lastSuccessfulScoreFetchAt ? "ERROR" : staleScores ? "UPDATE DELAYED" : tournamentFinished ? "FINAL" : scoringStarted ? "LIVE" : "TEE TIMES";
+  const showScoreWarning = Boolean(scoreError && (!lastSuccessfulScoreFetchAt || delayedScores || testDataMode));
+  const headerStatus = testDataMode ? "TEST DATA" : scoreError && !lastSuccessfulScoreFetchAt ? "ERROR" : delayedScores ? "UPDATE DELAYED" : tournamentFinished ? "FINAL" : scoringStarted ? "LIVE" : "TEE TIMES";
   const nextRefreshSeconds = Math.max(0, Math.ceil((nextScoreRefreshAt - currentTimeMs) / 1000));
   const leaderboard = useMemo(() => calculateLeaderboard(entries, golfers, { scoringStarted }), [entries, golfers, scoringStarted]);
 
@@ -226,7 +227,7 @@ export default function App() {
         </div>
       </header>
 
-      {scoreError && (
+      {showScoreWarning && (
         <div className={`border-b px-4 py-3 ${testDataMode ? "border-orange-300/25 bg-orange-400/10" : "border-amber-300/20 bg-amber-300/10"}`}>
           <div className={`mx-auto flex max-w-7xl items-center gap-2 text-sm font-semibold ${testDataMode ? "text-orange-100" : "text-amber-100"}`}>
             <AlertTriangle size={17} />

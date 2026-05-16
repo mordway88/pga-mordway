@@ -36,13 +36,7 @@ jobs:
         run: npm run build
 
       - name: Deploy live Worker
-        run: >
-          npx wrangler deploy worker.js
-          --name pga-mordway
-          --assets dist
-          --domain pga.mordway.com
-          --compatibility-date 2026-05-13
-          --compatibility-flag nodejs_compat
+        run: npx wrangler deploy
 
       - name: Verify live app
         run: |
@@ -52,3 +46,5 @@ jobs:
           curl -fsS https://pga.mordway.com | grep -vq 'Simulation'
           curl -fsS https://pga.mordway.com/api/entries > /tmp/entries.json
           node -e "const fs = require('fs'); const data = JSON.parse(fs.readFileSync('/tmp/entries.json','utf8')); if (!Array.isArray(data.entries) || data.entries.length < 1) throw new Error('No entries returned'); console.log(`${data.entries.length} entries verified`);"
+          curl -fsS https://pga.mordway.com/api/scores > /tmp/scores.json
+          node -e "const fs = require('fs'); const data = JSON.parse(fs.readFileSync('/tmp/scores.json','utf8')); if (!data.ok || !Array.isArray(data.golfers) || data.golfers.length < 1) throw new Error('No scores returned'); console.log(`${data.golfers.length} golfers verified`);"

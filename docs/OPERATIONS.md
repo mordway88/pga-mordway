@@ -68,8 +68,10 @@ Run:
 ```bash
 npm run lint
 npm run build
-npx wrangler deploy worker.js --name pga-mordway --assets dist --domain pga.mordway.com --compatibility-date 2026-05-13 --compatibility-flag nodejs_compat
+npx wrangler deploy
 ```
+
+`wrangler.jsonc` intentionally sets `assets.run_worker_first` for `/api/*` so API routes cannot be swallowed by the React single-page-app fallback.
 
 After deploy, verify:
 
@@ -77,4 +79,3 @@ After deploy, verify:
 - `/api/scores` returns golfers
 - the public UI is not showing simulation data
 - top team totals match the sum of counting players
-
