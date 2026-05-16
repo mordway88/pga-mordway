@@ -31,7 +31,7 @@ function buildPayoutLabel({ rankLabel, coveredPrizes, tieCount }) {
   }
 
   const parts = [];
-  if (cashLabel) parts.push(`projected ${cashLabel}`);
+  if (cashLabel) parts.push(cashLabel);
   if (nonCashLabel) parts.push(`${nonCashLabel} TBD`);
   const splitLabel = `Splits ${formatPrizeRange(coveredPrizes)} prizes`;
 
