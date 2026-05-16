@@ -8,6 +8,10 @@ function getCoveredPrizes(prizes, rank, tieCount) {
   return prizes.slice(startIndex, startIndex + tieCount);
 }
 
+function formatPrizeRange(coveredPrizes) {
+  return coveredPrizes.map((prize) => prize.placeLabel).join(" + ");
+}
+
 function buildPayoutLabel({ rankLabel, coveredPrizes, tieCount }) {
   if (!coveredPrizes.length) return null;
 
@@ -27,12 +31,13 @@ function buildPayoutLabel({ rankLabel, coveredPrizes, tieCount }) {
   }
 
   const parts = [];
-  if (cashLabel) parts.push(`${cashLabel} each`);
+  if (cashLabel) parts.push(`projected ${cashLabel}`);
   if (nonCashLabel) parts.push(`${nonCashLabel} TBD`);
+  const splitLabel = `Splits ${formatPrizeRange(coveredPrizes)} prizes`;
 
   return {
     shortLabel: `${rankLabel} · ${parts.join(" + ")}`,
-    detailLabel: `${parts.join(" + ")} · split ${coveredPrizes.map((prize) => prize.placeLabel).join("/")}`,
+    detailLabel: `${parts.join(" + ")} · ${splitLabel}`,
     cashEach,
     coveredPrizes,
   };
