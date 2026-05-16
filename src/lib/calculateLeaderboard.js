@@ -113,7 +113,12 @@ export function calculateLeaderboard(entries, golfers, options = {}) {
     const totalScore = countingPlayers.reduce((sum, player) => sum + player.score, 0);
     const onCourseCount = playersData.filter((player) => player.playState === "onCourse").length;
     const finishedCount = playersData.filter((player) => player.playState === "finishedToday").length;
-    const outCount = playersData.filter((player) => ["CUT", "WD", "DQ"].includes(player.status)).length;
+    const statusCounts = {
+      CUT: playersData.filter((player) => player.status === "CUT").length,
+      WD: playersData.filter((player) => player.status === "WD").length,
+      DQ: playersData.filter((player) => player.status === "DQ").length,
+    };
+    const outCount = statusCounts.CUT + statusCounts.WD + statusCounts.DQ;
     const nextTeeTime = getNextTeeTime(playersData);
     const unmatchedPlayers = playersData.filter((player) => player.isMissing);
     const incompletePlayers = playersData.filter((player) => /^Missing Group/i.test(player.status || ""));
@@ -133,6 +138,7 @@ export function calculateLeaderboard(entries, golfers, options = {}) {
       onCourseCount,
       finishedCount,
       outCount,
+      statusCounts,
       nextTeeTime,
       unmatchedPlayers,
       incompletePlayers,

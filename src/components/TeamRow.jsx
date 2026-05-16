@@ -7,12 +7,21 @@ function getPrizeStatus(entry) {
   return entry?.projectedPayout?.shortLabel || null;
 }
 
+function formatStatusCounts(statusCounts = {}) {
+  return [
+    statusCounts.CUT > 0 ? `${statusCounts.CUT} cut` : null,
+    statusCounts.WD > 0 ? `${statusCounts.WD} WD` : null,
+    statusCounts.DQ > 0 ? `${statusCounts.DQ} DQ` : null,
+  ].filter(Boolean).join(" · ");
+}
+
 export function TeamRow({ entry, expanded, onToggle, scoringStarted }) {
   const hasTeamActivity = entry.onCourseCount > 0 || entry.finishedCount > 0 || entry.outCount > 0;
+  const statusSummary = formatStatusCounts(entry.statusCounts);
   const activityText = [
     entry.onCourseCount > 0 ? `${entry.onCourseCount} on course` : null,
     entry.finishedCount > 0 ? `${entry.finishedCount} finished` : null,
-    entry.outCount > 0 ? `${entry.outCount} cut/WD/DQ` : null,
+    statusSummary || null,
   ].filter(Boolean).join(" · ");
   const detailText = scoringStarted && hasTeamActivity
     ? activityText
@@ -62,7 +71,7 @@ export function TeamRow({ entry, expanded, onToggle, scoringStarted }) {
         <div className="col-span-full flex items-center justify-between gap-2 border-t border-white/8 pt-2 sm:col-span-1 sm:border-0 sm:pt-0">
           <div className="flex flex-wrap gap-1 sm:hidden">
             <span className="rounded-full bg-white/10 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white/55">{entry.playersData.filter((player) => player.isCounting).length}/10 counting</span>
-            {entry.outCount > 0 && <span className="rounded-full bg-orange-300/15 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-orange-100">{entry.outCount} cut/WD/DQ</span>}
+            {statusSummary && <span className="rounded-full bg-orange-300/15 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-orange-100">{statusSummary}</span>}
           </div>
           <span className={`font-condensed text-xs font-bold uppercase tracking-[0.12em] ${expanded ? "text-amber-200" : "text-white/50 group-hover:text-white/75"}`}>
             {expanded ? "Collapse team" : "View team"}
