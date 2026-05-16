@@ -151,6 +151,8 @@ export function calculateLeaderboard(entries, golfers, options = {}) {
       : index > 0 && entry.totalScore === calculatedEntries[index - 1].totalScore
       ? calculatedEntries[index - 1].rank
       : index + 1;
+    const tied = scoringStarted && calculatedEntries.some((team) => team.id !== entry.id && team.totalScore === entry.totalScore);
+    entry.rankLabel = tied ? `T${entry.rank}` : String(entry.rank);
   });
 
   return calculatedEntries;

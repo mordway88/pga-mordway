@@ -68,6 +68,22 @@ function getRound(linescores = [], roundNumber) {
   return linescores.find((round) => Number(round?.period ?? 0) === Number(roundNumber)) || null;
 }
 
+function hasCompletedRound(linescores = [], roundNumber) {
+  const round = getRound(linescores, roundNumber);
+  return Boolean(round && (round.linescores?.length >= 18 || Number(round.value) > 0 || /^[-+E0-9]/.test(String(round.displayValue || ""))));
+}
+
+function inferCutStatus(linescores = [], scheduledRound) {
+  const hasWeekendRound = linescores.some((round) => Number(round?.period ?? 0) >= 3);
+  const completedFirstTwoRounds = hasCompletedRound(linescores, 1) && hasCompletedRound(linescores, 2);
+
+  // ESPN does not always send the word "CUT". Once the weekend round exists,
+  // cut golfers usually keep only their completed R1/R2 rows while active
+  // golfers receive R3/R4 placeholders. Keep their real score, but flag status.
+  if (scheduledRound >= 3 && completedFirstTwoRounds && !hasWeekendRound) return "CUT";
+  return null;
+}
+
 export function parseEspnCompetitor(competitor) {
   const athlete = competitor?.athlete || competitor?.competitor || competitor;
   const name = pickFirst(athlete?.displayName, athlete?.fullName, athlete?.name, competitor?.displayName, competitor?.name, "Unknown Golfer");
@@ -83,12 +99,13 @@ export function parseEspnCompetitor(competitor) {
     ),
   );
 
-  const detectedStatus = getStatusText(competitor, scoreStr, normalizedName);
+  const explicitStatus = getStatusText(competitor, scoreStr, normalizedName);
   const score = parseGolfScore(scoreStr);
   const override = MANUAL_SCORE_OVERRIDES[normalizedName];
   const linescores = competitor?.linescores || [];
   const activeRound = getActiveRound(linescores);
   const scheduledRound = getCurrentRoundForSchedule();
+  const detectedStatus = explicitStatus ?? inferCutStatus(linescores, scheduledRound);
   const currentRound = getRound(linescores, scheduledRound);
   const currentRoundHolesPlayed = currentRound?.linescores?.length || 0;
   const thru = pickFirst(competitor?.status?.period, competitor?.thru, competitor?.currentHole);

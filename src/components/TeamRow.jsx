@@ -1,11 +1,20 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { tournamentConfig } from "../config/tournamentConfig";
 import { getScoreTone } from "../lib/scoreTone";
 import { TeamRoster } from "./TeamRoster";
 
 function formatUnmatchedMessage(count) {
   if (!count) return null;
   return count === 1 ? "1 golfer not matched to live scoring" : `${count} golfers not matched to live scoring`;
+}
+
+function getPrizeStatus(entry) {
+  if (!entry?.rank) return null;
+  const prize = tournamentConfig.prizes?.[entry.rank - 1];
+  if (!prize) return null;
+  const tied = String(entry.rankLabel || "").startsWith("T");
+  return tied ? `${entry.rankLabel} · payout TBD` : `${prize.placeLabel} · ${prize.prize}`;
 }
 
 export function TeamRow({ entry, expanded, onToggle, scoringStarted }) {
@@ -19,6 +28,7 @@ export function TeamRow({ entry, expanded, onToggle, scoringStarted }) {
     ? activityText
     : `Earliest team tee time: ${entry.nextTeeTime}`;
   const unmatchedMessage = entry.validationIssues?.[0] || formatUnmatchedMessage(entry.unmatchedPlayers.length);
+  const prizeStatus = scoringStarted ? getPrizeStatus(entry) : null;
 
   return (
     <motion.div
@@ -45,6 +55,11 @@ export function TeamRow({ entry, expanded, onToggle, scoringStarted }) {
         <div>
           <div className="flex flex-wrap items-center gap-2 font-condensed text-xl font-bold uppercase tracking-[0.04em] text-white sm:text-2xl">
             {entry.name}
+            {prizeStatus && (
+              <span className="rounded-full border border-amber-200/35 bg-amber-300/14 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-amber-100">
+                {prizeStatus}
+              </span>
+            )}
             {entry.reviewNeeded && (
               <span className="rounded-full border border-orange-300/50 bg-orange-300/15 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-orange-100">
                 Review needed
