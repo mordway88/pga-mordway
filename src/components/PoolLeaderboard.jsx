@@ -9,12 +9,10 @@ export function PoolLeaderboard({ leaderboard, entryMeta, entriesLoading, entryE
   const normalizedQuery = teamQuery.trim().toLowerCase();
   const quickFilters = [
     { id: "all", label: "All" },
-    { id: "top10", label: "Top 10" },
     { id: "active", label: "On course" },
   ];
   const filteredLeaderboard = leaderboard
-    .filter((entry, index) => {
-      if (quickFilter === "top10") return index < 10;
+    .filter((entry) => {
       if (quickFilter === "active") return entry.onCourseCount > 0;
       return true;
     })
