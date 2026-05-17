@@ -194,6 +194,9 @@ export default function App() {
               <h1 className="mt-0.5 font-condensed text-3xl font-black uppercase leading-none text-white drop-shadow-[0_2px_18px_rgba(255,255,255,.08)] sm:text-5xl">
                 {tournamentConfig.appTitle}
               </h1>
+              <div className="mt-1 font-condensed text-lg font-bold uppercase tracking-[0.16em] text-white/62 sm:text-xl">
+                Fantasy Leaderboard
+              </div>
             </div>
             <div className="rounded-lg border border-white/10 bg-white/[0.055] p-2 text-[11px] font-bold uppercase tracking-[0.12em] text-white/60 lg:min-w-80">
               <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">

@@ -2,8 +2,8 @@ export const TOURNAMENT_CONFIGS = {
   pga2026: {
     id: "pga2026",
     active: true,
-    appTitle: "Major Fantasy Leaderboard",
-    productLabel: "Fantasy Golf Major",
+    appTitle: "PGA Championship",
+    productLabel: "Fantasy Golf Pool",
     displayName: "2026 PGA Championship",
     majorName: "PGA Championship",
     espnEventMatchers: ["pga championship"],
@@ -70,4 +70,3 @@ export const TOURNAMENT_CONFIGS = {
 
 export const ACTIVE_TOURNAMENT_ID = "pga2026";
 export const tournamentConfig = TOURNAMENT_CONFIGS[ACTIVE_TOURNAMENT_ID];
-
