@@ -3,7 +3,7 @@ import { AlertTriangle, Loader2, Search, Users, X } from "lucide-react";
 import { TeamRow } from "./TeamRow";
 
 export function PoolLeaderboard({ leaderboard, entryMeta, entriesLoading, entryError, scoringStarted }) {
-  const [expandedTeamId, setExpandedTeamId] = useState(leaderboard[0]?.id || null);
+  const [expandedTeamId, setExpandedTeamId] = useState(null);
   const [teamQuery, setTeamQuery] = useState("");
   const [quickFilter, setQuickFilter] = useState("all");
   const normalizedQuery = teamQuery.trim().toLowerCase();
