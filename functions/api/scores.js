@@ -1,10 +1,34 @@
 import { tournamentConfig } from "../../src/config/tournamentConfig.js";
-import { buildScoresPayload } from "../../src/lib/scoreApi.js";
 
 export async function onRequestGet() {
   try {
-    return Response.json(await buildScoresPayload(tournamentConfig), {
+    const response = await fetch(tournamentConfig.espnScoreboardUrl, {
+      cf: {
+        cacheTtl: tournamentConfig.scoreCacheSeconds || 45,
+        cacheEverything: true,
+      },
+    });
+
+    if (!response.ok) {
+      return Response.json(
+        {
+          ok: false,
+          error: `Score feed request failed: ${response.status}`,
+          eventName: tournamentConfig.displayName,
+          fetchedAt: new Date().toISOString(),
+        },
+        {
+          status: 502,
+          headers: {
+            "Cache-Control": "no-store",
+          },
+        },
+      );
+    }
+
+    return new Response(response.body, {
       headers: {
+        "Content-Type": "application/json",
         "Cache-Control": `public, max-age=${tournamentConfig.scoreCacheSeconds || 45}`,
       },
     });
@@ -14,7 +38,6 @@ export async function onRequestGet() {
         ok: false,
         error: error.message,
         eventName: tournamentConfig.displayName,
-        source: "ESPN",
         fetchedAt: new Date().toISOString(),
       },
       {
@@ -26,4 +49,3 @@ export async function onRequestGet() {
     );
   }
 }
-

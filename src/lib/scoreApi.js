@@ -15,11 +15,7 @@ export function selectScoreEvent(events = [], config = tournamentConfig) {
   return events.find((event) => eventMatches(event, config)) || events[0] || null;
 }
 
-export async function buildScoresPayload(config = tournamentConfig, fetchImpl = fetch) {
-  const response = await fetchImpl(config.espnScoreboardUrl);
-  if (!response.ok) throw new Error(`ESPN request failed: ${response.status}`);
-
-  const payload = await response.json();
+export function normalizeScoreboardPayload(payload, config = tournamentConfig) {
   const event = selectScoreEvent(payload?.events || [], config);
   const competitors = getCompetitorsFromEvent(event);
 
@@ -37,3 +33,9 @@ export async function buildScoresPayload(config = tournamentConfig, fetchImpl = 
   };
 }
 
+export async function buildScoresPayload(config = tournamentConfig, fetchImpl = fetch) {
+  const response = await fetchImpl(config.espnScoreboardUrl);
+  if (!response.ok) throw new Error(`ESPN request failed: ${response.status}`);
+
+  return normalizeScoreboardPayload(await response.json(), config);
+}

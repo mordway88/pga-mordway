@@ -1,6 +1,5 @@
 import { tournamentConfig } from "./src/config/tournamentConfig.js";
 import { buildEntriesPayload, getEntrySheetUrl } from "./src/lib/entryParsing.js";
-import { buildScoresPayload } from "./src/lib/scoreApi.js";
 
 const ENTRY_CACHE_URL = "https://major-fantasy-cache.local/entries";
 
@@ -53,8 +52,28 @@ async function handleEntries() {
 
 async function handleScores() {
   try {
-    return Response.json(await buildScoresPayload(tournamentConfig), {
+    const response = await fetch(tournamentConfig.espnScoreboardUrl, {
+      cf: {
+        cacheTtl: tournamentConfig.scoreCacheSeconds || 45,
+        cacheEverything: true,
+      },
+    });
+
+    if (!response.ok) {
+      return jsonResponse(
+        {
+          ok: false,
+          error: `Score feed request failed: ${response.status}`,
+          eventName: tournamentConfig.displayName,
+          fetchedAt: new Date().toISOString(),
+        },
+        { status: 502 },
+      );
+    }
+
+    return new Response(response.body, {
       headers: {
+        "Content-Type": "application/json",
         "Cache-Control": `public, max-age=${tournamentConfig.scoreCacheSeconds || 45}`,
       },
     });
@@ -64,7 +83,6 @@ async function handleScores() {
         ok: false,
         error: error.message,
         eventName: tournamentConfig.displayName,
-        source: "ESPN",
         fetchedAt: new Date().toISOString(),
       },
       { status: 502 },
@@ -80,4 +98,3 @@ export default {
     return env.ASSETS.fetch(request);
   },
 };
-

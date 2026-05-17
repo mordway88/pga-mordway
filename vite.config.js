@@ -3,7 +3,6 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { tournamentConfig } from "./src/config/tournamentConfig.js";
 import { buildEntriesPayload, getEntrySheetUrl } from "./src/lib/entryParsing.js";
-import { buildScoresPayload } from "./src/lib/scoreApi.js";
 
 function json(response, payload, statusCode = 200) {
   response.statusCode = statusCode;
@@ -27,7 +26,11 @@ function devApi() {
 
       server.middlewares.use("/api/scores", async (_request, response) => {
         try {
-          json(response, await buildScoresPayload(tournamentConfig));
+          const scoreResponse = await fetch(tournamentConfig.espnScoreboardUrl);
+          if (!scoreResponse.ok) throw new Error(`Score feed request failed: ${scoreResponse.status}`);
+          response.statusCode = 200;
+          response.setHeader("Content-Type", "application/json");
+          response.end(await scoreResponse.text());
         } catch (error) {
           json(response, { ok: false, error: error.message, fetchedAt: new Date().toISOString() }, 502);
         }
@@ -43,4 +46,3 @@ export default defineConfig({
     tailwindcss(),
   ],
 });
-
