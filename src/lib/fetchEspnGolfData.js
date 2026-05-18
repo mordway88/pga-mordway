@@ -1,10 +1,13 @@
 import { tournamentConfig } from "../config/tournamentConfig";
+import { frozenScores } from "../data/frozenScores";
 import { generateSimulatedGolfers, SIMULATION_STAGES } from "./generateSimulatedGolfers";
 import { normalizeScoreboardPayload } from "./scoreApi";
 
 const ENABLE_SIMULATION = import.meta.env.VITE_ENABLE_SIMULATION === "true";
 
 export async function fetchGolfScores() {
+  if (tournamentConfig.frozen) return frozenScores;
+
   if (ENABLE_SIMULATION) {
     const stage = new URLSearchParams(window.location.search).get("sim") || "pre";
     const simulationStage = SIMULATION_STAGES.includes(stage) ? stage : "pre";

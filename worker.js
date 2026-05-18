@@ -1,4 +1,6 @@
 import { tournamentConfig } from "./src/config/tournamentConfig.js";
+import { frozenEntries } from "./src/data/frozenEntries.js";
+import { frozenScores } from "./src/data/frozenScores.js";
 import { buildEntriesPayload, getEntrySheetUrl } from "./src/lib/entryParsing.js";
 
 const ENTRY_CACHE_URL = "https://major-fantasy-cache.local/entries";
@@ -37,6 +39,8 @@ async function writeCachedEntries(payload) {
 }
 
 async function handleEntries() {
+  if (tournamentConfig.frozen) return jsonResponse(frozenEntries);
+
   const response = await fetch(getEntrySheetUrl(tournamentConfig));
 
   if (!response.ok) {
@@ -51,6 +55,8 @@ async function handleEntries() {
 }
 
 async function handleScores() {
+  if (tournamentConfig.frozen) return jsonResponse(frozenScores);
+
   try {
     const response = await fetch(tournamentConfig.espnScoreboardUrl, {
       cf: {

@@ -1,4 +1,9 @@
+import { tournamentConfig } from "../config/tournamentConfig";
+import { frozenEntries } from "../data/frozenEntries";
+
 export async function fetchPoolEntries() {
+  if (tournamentConfig.frozen) return frozenEntries;
+
   const response = await fetch("/api/entries", {
     headers: {
       Accept: "application/json",

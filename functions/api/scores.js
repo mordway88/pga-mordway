@@ -1,6 +1,15 @@
 import { tournamentConfig } from "../../src/config/tournamentConfig.js";
+import { frozenScores } from "../../src/data/frozenScores.js";
 
 export async function onRequestGet() {
+  if (tournamentConfig.frozen) {
+    return Response.json(frozenScores, {
+      headers: {
+        "Cache-Control": "public, max-age=31536000, immutable",
+      },
+    });
+  }
+
   try {
     const response = await fetch(tournamentConfig.espnScoreboardUrl, {
       cf: {

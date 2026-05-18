@@ -2,6 +2,8 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { tournamentConfig } from "./src/config/tournamentConfig.js";
+import { frozenEntries } from "./src/data/frozenEntries.js";
+import { frozenScores } from "./src/data/frozenScores.js";
 import { buildEntriesPayload, getEntrySheetUrl } from "./src/lib/entryParsing.js";
 
 function json(response, payload, statusCode = 200) {
@@ -16,6 +18,11 @@ function devApi() {
     configureServer(server) {
       server.middlewares.use("/api/entries", async (_request, response) => {
         try {
+          if (tournamentConfig.frozen) {
+            json(response, frozenEntries);
+            return;
+          }
+
           const sheetResponse = await fetch(getEntrySheetUrl(tournamentConfig));
           if (!sheetResponse.ok) throw new Error(`Google Sheet request failed: ${sheetResponse.status}`);
           json(response, buildEntriesPayload(await sheetResponse.text(), tournamentConfig));
@@ -26,6 +33,11 @@ function devApi() {
 
       server.middlewares.use("/api/scores", async (_request, response) => {
         try {
+          if (tournamentConfig.frozen) {
+            json(response, frozenScores);
+            return;
+          }
+
           const scoreResponse = await fetch(tournamentConfig.espnScoreboardUrl);
           if (!scoreResponse.ok) throw new Error(`Score feed request failed: ${scoreResponse.status}`);
           response.statusCode = 200;

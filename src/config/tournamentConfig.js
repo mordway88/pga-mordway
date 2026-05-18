@@ -17,6 +17,8 @@ export const TOURNAMENT_CONFIGS = {
     timezone: "America/Los_Angeles",
     scoreRefreshMs: 60000,
     scoreCacheSeconds: 45,
+    frozen: true,
+    finalSnapshotAt: "2026-05-18T04:23:37.133Z",
     roundDates: {
       1: "2026-05-14",
       2: "2026-05-15",

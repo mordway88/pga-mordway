@@ -7,10 +7,11 @@ export function PoolLeaderboard({ leaderboard, entryMeta, entriesLoading, entryE
   const [teamQuery, setTeamQuery] = useState("");
   const [quickFilter, setQuickFilter] = useState("all");
   const normalizedQuery = teamQuery.trim().toLowerCase();
+  const hasTeamsOnCourse = leaderboard.some((entry) => entry.onCourseCount > 0);
   const quickFilters = [
     { id: "all", label: "All" },
-    { id: "active", label: "On course" },
-  ];
+    hasTeamsOnCourse ? { id: "active", label: "On course" } : null,
+  ].filter(Boolean);
   const filteredLeaderboard = leaderboard
     .filter((entry) => {
       if (quickFilter === "active") return entry.onCourseCount > 0;

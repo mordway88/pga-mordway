@@ -1,7 +1,16 @@
 import { tournamentConfig } from "../../src/config/tournamentConfig.js";
+import { frozenEntries } from "../../src/data/frozenEntries.js";
 import { buildEntriesPayload, getEntrySheetUrl } from "../../src/lib/entryParsing.js";
 
 export async function onRequestGet() {
+  if (tournamentConfig.frozen) {
+    return Response.json(frozenEntries, {
+      headers: {
+        "Cache-Control": "public, max-age=31536000, immutable",
+      },
+    });
+  }
+
   const response = await fetch(getEntrySheetUrl(tournamentConfig));
 
   if (!response.ok) {
@@ -15,4 +24,3 @@ export async function onRequestGet() {
     },
   });
 }
-

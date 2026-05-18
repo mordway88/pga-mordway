@@ -7,6 +7,8 @@ import { TournamentLeaderboard } from "./components/TournamentLeaderboard";
 import { WanamakerTrophy } from "./components/WanamakerTrophy";
 import { DebugPanel } from "./components/DebugPanel";
 import { tournamentConfig } from "./config/tournamentConfig";
+import { frozenEntries } from "./data/frozenEntries";
+import { frozenScores } from "./data/frozenScores";
 import { calculateLeaderboard } from "./lib/calculateLeaderboard";
 import { fetchEspnGolfData } from "./lib/fetchEspnGolfData";
 import { fetchPoolEntries } from "./lib/fetchPoolEntries";
@@ -46,8 +48,9 @@ function writeStoredPayload(key, payload) {
 }
 
 export default function App() {
-  const storedScores = typeof window !== "undefined" ? readStoredPayload(SCORE_STORAGE_KEY) : null;
-  const storedEntries = typeof window !== "undefined" ? readStoredPayload(ENTRY_STORAGE_KEY) : null;
+  const frozenMode = Boolean(tournamentConfig.frozen);
+  const storedScores = frozenMode ? frozenScores : typeof window !== "undefined" ? readStoredPayload(SCORE_STORAGE_KEY) : null;
+  const storedEntries = frozenMode ? frozenEntries : typeof window !== "undefined" ? readStoredPayload(ENTRY_STORAGE_KEY) : null;
   const [activeView, setActiveView] = useState("pool");
   const [golfers, setGolfers] = useState(storedScores?.golfers || []);
   const [entries, setEntries] = useState(storedEntries?.entries || []);
@@ -131,6 +134,8 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (frozenMode) return undefined;
+
     const initialLoadId = window.setTimeout(() => {
       loadGolfData();
       loadEntries();
@@ -145,7 +150,7 @@ export default function App() {
       window.clearInterval(entryIntervalId);
       window.clearInterval(clockIntervalId);
     };
-  }, [loadEntries, loadGolfData]);
+  }, [frozenMode, loadEntries, loadGolfData]);
 
   const scoringStarted = useMemo(() => {
     return hasTournamentStarted() || golfers.some((golfer) => golfer.status === "F" || /^Thru/i.test(golfer.status || "") || golfer.todayScore !== "-");
@@ -159,13 +164,14 @@ export default function App() {
     );
   }, [golfers, scoringStarted]);
   const delayedScores = Boolean(
+    !frozenMode &&
     scoringStarted &&
       lastSuccessfulScoreFetchAt &&
       currentTimeMs &&
       currentTimeMs - new Date(lastSuccessfulScoreFetchAt).getTime() > SCORE_DELAY_WARNING_MS
   );
-  const showScoreWarning = Boolean(scoreError && (!lastSuccessfulScoreFetchAt || delayedScores || testDataMode));
-  const headerStatus = testDataMode ? "TEST DATA" : scoreError && !lastSuccessfulScoreFetchAt ? "ERROR" : delayedScores ? "UPDATE DELAYED" : tournamentFinished ? "FINAL" : scoringStarted ? "LIVE" : "TEE TIMES";
+  const showScoreWarning = Boolean(!frozenMode && scoreError && (!lastSuccessfulScoreFetchAt || delayedScores || testDataMode));
+  const headerStatus = frozenMode ? "FINAL" : testDataMode ? "TEST DATA" : scoreError && !lastSuccessfulScoreFetchAt ? "ERROR" : delayedScores ? "UPDATE DELAYED" : tournamentFinished ? "FINAL" : scoringStarted ? "LIVE" : "TEE TIMES";
   const nextRefreshSeconds = Math.max(0, Math.ceil((nextScoreRefreshAt - currentTimeMs) / 1000));
   const leaderboard = useMemo(() => calculateLeaderboard(entries, golfers, { scoringStarted }), [entries, golfers, scoringStarted]);
 
@@ -206,23 +212,25 @@ export default function App() {
               <div className="mt-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                 <span className="inline-flex items-center gap-2">
                 {scoresLoading && !lastUpdated && <Loader2 size={14} className="animate-spin text-amber-200" />}
-                  {lastUpdated ? `Updated ${lastUpdated}` : "Loading scores"}
+                  {lastUpdated ? `${frozenMode ? "Finalized" : "Updated"} ${lastUpdated}` : "Loading scores"}
                 </span>
                 <span>{entries.length} teams</span>
               </div>
               <div className="mt-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                 <span className="inline-flex items-center gap-2">
                   <RadioTower size={14} />
-                  Scores refresh automatically
+                  {frozenMode ? "Final leaderboard" : "Scores refresh automatically"}
                 </span>
-                <button
-                  type="button"
-                  onClick={() => loadGolfData()}
-                  className="inline-flex items-center gap-1 rounded-md border border-amber-200/20 bg-amber-200/10 px-2 py-1 text-amber-100 transition hover:bg-amber-200/18"
-                >
-                  <RefreshCw size={13} className={scoresLoading ? "animate-spin" : ""} />
-                  Refresh · {nextRefreshSeconds}s
-                </button>
+                {!frozenMode && (
+                  <button
+                    type="button"
+                    onClick={() => loadGolfData()}
+                    className="inline-flex items-center gap-1 rounded-md border border-amber-200/20 bg-amber-200/10 px-2 py-1 text-amber-100 transition hover:bg-amber-200/18"
+                  >
+                    <RefreshCw size={13} className={scoresLoading ? "animate-spin" : ""} />
+                    Refresh · {nextRefreshSeconds}s
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -261,7 +269,7 @@ export default function App() {
       </motion.main>
 
       <footer className="border-t border-white/10 px-4 py-6 text-center text-[10px] font-bold uppercase tracking-[0.16em] text-white/35">
-        {tournamentConfig.appTitle} · Build {BUILD_LABEL} · Updated {lastUpdated || "loading"} · {entries.length || entryMeta?.entries?.length || 0} teams
+        {tournamentConfig.appTitle} · Build {BUILD_LABEL} · {frozenMode ? "Finalized" : "Updated"} {lastUpdated || "loading"} · {entries.length || entryMeta?.entries?.length || 0} teams
       </footer>
     </div>
   );
